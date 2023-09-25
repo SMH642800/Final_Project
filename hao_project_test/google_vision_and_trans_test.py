@@ -3,7 +3,7 @@ from google.cloud import vision_v1
 from google.cloud import translate_v2 as translate
 
 # 設定Google Cloud金鑰環境變數，請將YOUR_GOOGLE_CLOUD_KEY替換成你的實際金鑰
-# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'manifest-surfer-400014-af662a2c9a6c.json'
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/menghao/Downloads/大學專題資料/googleAPI/manifest-surfer-400014-6ed9f85a5367.json'
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "YOUR_GOOGLE_CLOUD_KEY.json"
 
 # 初始化Google Cloud Vision API客戶端
