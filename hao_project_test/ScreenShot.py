@@ -38,11 +38,11 @@ class Window(QMainWindow):
                                           self.geometry().y() + self.geometry().height()))
 
          # Convert the screenshot to a QImage
-        image = QImage(screenshot.tobytes(), screenshot.width, screenshot.height,
-                       screenshot.width * 3, QImage.Format_RGB888)
+        #image = QImage(screenshot.tobytes(), screenshot.width, screenshot.height,
+        #               screenshot.width * 3, QImage.Format_RGB888)
 
         # Create a QPixmap from the QImage and display it in the label
-        pixmap = QPixmap.fromImage(image)
+        #pixmap = QPixmap.fromImage(image)
         #self.label_1.setPixmap(pixmap)
 
         # Save the screenshot as a PNG file

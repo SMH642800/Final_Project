@@ -17,7 +17,7 @@ client_translate = translate.Client()
 detected_start = time.time()
 
 # 載入圖片
-image_path = "img001.png"  # 將此替換為你的圖片路徑
+image_path = "screenshot.png"  # 將此替換為你的圖片路徑
 with open(image_path, "rb") as image_file:
     content = image_file.read()
 
