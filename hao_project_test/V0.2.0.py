@@ -2,12 +2,13 @@ import io
 import os
 import sys
 import html
+import subprocess
+import threading
 from PIL import Image
 from PySide6.QtCore import * 
 from PySide6.QtGui import * 
 from PySide6.QtWidgets import * 
 from PySide6.QtCore import QObject, Signal
-import requests
 import pyscreenshot as ImageGrab
 from google.cloud import vision_v1
 from google.cloud import translate_v2 as translate
@@ -60,6 +61,9 @@ class MaincapturingWindow(QMainWindow):
 
         # Add the QWidget to the main window
         self.setCentralWidget(widget)
+
+        # 设置窗口标志，使其始终显示在最上面
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         # Initialize the attribute
         self.screen_capture_window = None  
@@ -119,14 +123,38 @@ class ScreenCaptureWindow(QMainWindow):
   
         # set the title
         self.setWindowTitle("Screen Capture region")
-  
+
+        # 設置視窗的特明度
         self.setWindowOpacity(0.5)
+
+        # 创建一个水平布局管理器
+        layout = QHBoxLayout()
   
         # setting  the geometry of window
         screen_geometry = QApplication.primaryScreen().geometry()
-        self.setGeometry(screen_geometry.left() + screen_geometry.width() // 4, 
-                         screen_geometry.top() + screen_geometry.height() // 2,
-                         screen_geometry.width() // 2, screen_geometry.height() // 3)
+
+        # set x, y coordinate & width, height
+        start_x_position = screen_geometry.left() + screen_geometry.width() // 4
+        start_y_position = screen_geometry.top() + screen_geometry.height() // 2
+        screen_width = screen_geometry.width() // 3
+        screen_height = screen_geometry.height() // 4
+        self.setGeometry(start_x_position, start_y_position, screen_width, screen_height)
+
+        # plot the border of the window
+        self.border_frame = QFrame(self)
+        #self.border_frame.setGeometry(0, 0,  self.width(), self.height())
+        self.border_frame.setFrameShape(QFrame.Box)
+        self.border_frame.setStyleSheet('QFrame { border: 3px solid red; }')
+
+        # 将边界线条添加到布局管理器
+        layout.addWidget(self.border_frame)
+
+        # 创建一个 widget 以容纳布局管理器
+        container_widget = QWidget(self)
+        container_widget.setLayout(layout)
+
+        # 将 widget 设置为主窗口的中心部件
+        self.setCentralWidget(container_widget)
         
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.capture_screen)
@@ -134,12 +162,33 @@ class ScreenCaptureWindow(QMainWindow):
         # show all the widgets
         self.show()
 
+    def resizeEvent(self, event):
+        # 在窗口大小变化时调整边界线条的位置
+        super().resizeEvent(event)
+        self.adjustBorderPosition()
+
+    def adjustBorderPosition(self):
+        # 获取窗口的新大小
+        new_width = self.width()
+        new_height = self.height()
+
+        # 调整边界线条的位置
+        self.border_frame.setGeometry(0, 0, new_width, new_height)
+
     def start_capture(self):
-        self.timer.start(2000)  # Capture every 1000 milliseconds (1 second)
+        self.timer.start(2000)  # Capture every 2000 milliseconds (2 second)
+
+        # 更改窗口透明度和边界线条
+        self.setWindowOpacity(0.1)
+        self.border_frame.hide()
 
     def stop_capture(self):
         self.timer.stop()
         QMessageBox.information(self, "Info", "Screen capture stopped.")
+
+        # 恢复窗口透明度和边界线条
+        self.setWindowOpacity(0.5)
+        self.border_frame.show()
 
     def capture_screen(self):
         global capture_start
@@ -229,7 +278,21 @@ class ScreenCaptureWindow(QMainWindow):
             
         else:
             print("No text detected in the image.")
-  
+
+
+def bring_window_to_front(window_title):
+    applescript = f"""
+    tell application "System Events"
+        set frontApp to name of first application process whose frontmost is true
+    end tell
+
+    tell application frontApp
+        activate
+    end tell
+    """
+    
+    subprocess.run(["osascript", "-e", applescript]) 
+
 
 if __name__ == "__main__":
 

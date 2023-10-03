@@ -117,7 +117,7 @@ class ScreenCaptureWindow(QMainWindow):
             print("No text detected in the image.")
   
 
-class MainRecordingWindow(QMainWindow):
+class MaincapturingWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
@@ -142,7 +142,7 @@ class MainRecordingWindow(QMainWindow):
         #self.Add_button = QPushButton("ADD Window", self)
         #self.Add_button.clicked.connect(self.start_screen_capture)
 
-        # Create a recording button to start screen capture
+        # Create a capturing button to start screen capture
         self.record_button = QPushButton("Record", self)
         self.record_button.clicked.connect(self.start_screen_capture)
 
@@ -187,13 +187,13 @@ if __name__ == "__main__":
     # create pyqt5 app
     App = QApplication(sys.argv)
     
-    # Create the screen capture window and the main recording control window
+    # Create the screen capture window and the main capturing control window
     #screen_capture_window = ScreenCaptureWindow()
-    main_recording_window = MainRecordingWindow()
+    main_capturing_window = MaincapturingWindow()
 
     # Show the windows
     #screen_capture_window.show()
-    main_recording_window.show()
+    main_capturing_window.show()
     
     # start the app
     sys.exit(App.exec())
