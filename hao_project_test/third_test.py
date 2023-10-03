@@ -5,6 +5,7 @@ from PIL import Image
 from PySide6.QtCore import * 
 from PySide6.QtGui import * 
 from PySide6.QtWidgets import * 
+from PySide6.QtCore import QObject, Signal
 import pyscreenshot as ImageGrab
 from google.cloud import vision_v1
 from google.cloud import translate_v2 as translate
@@ -46,9 +47,10 @@ class MainRecordingWindow(QMainWindow):
         self.stop_button.setEnabled(False)  # Initially disabled
 
         # Set button backgrounds to transparent
-        self.add_window_button.setStyleSheet('QPushButton {background-color: transparent; color: red;}')
+        #self.add_window_button.setStyleSheet('QPushButton {background-color: transparent; color: red;}')
+        self.add_window_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
         self.record_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
-        self.stop_button.setStyleSheet('QPushButton {background-color: transparent; color: red;}')
+        self.stop_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
 
         # Create a vertical layout to accommodate the buttons
         layout = QVBoxLayout()
@@ -62,6 +64,7 @@ class MainRecordingWindow(QMainWindow):
 
         # Add the QWidget to the main window
         self.setCentralWidget(widget)
+        
 
     def add_or_check_screen_capture_window(self):
         # Check if a screen capture window is already open
@@ -70,8 +73,9 @@ class MainRecordingWindow(QMainWindow):
         else:
             # Create and show the screen capture window
             self.screen_capture_window = ScreenCaptureWindow()
+            self.screen_capture_window.closed.connect(self.handle_screen_capture_window_closed)
             self.screen_capture_window.show()
-
+        
     def start_capture(self):
         if hasattr(self, 'screen_capture_window') and self.screen_capture_window:
             self.record_button.setEnabled(False)
@@ -86,8 +90,21 @@ class MainRecordingWindow(QMainWindow):
             self.stop_button.setEnabled(False)
             self.screen_capture_window.stop_capture()
 
+    def handle_screen_capture_window_closed(self):
+        # Slot to handle the screen capture window being closed
+        self.screen_capture_window = None
+
+    def closeEvent(self, event):
+        # Check if the screen_capture_window is open and close it
+        if self.screen_capture_window is not None:
+            self.screen_capture_window.close()
+        
+        event.accept()
+
 
 class ScreenCaptureWindow(QMainWindow):
+    # Define a custom signal at the class level
+    closed = Signal()
   
     def __init__(self):
         super().__init__()
@@ -118,21 +135,24 @@ class ScreenCaptureWindow(QMainWindow):
 
     def capture_screen(self):
         global capture_start
-        # 開始測量capture時間
-        capture_start = time.time()
 
-        # Capture the screen content within the window's geometry
-        screenshot = ImageGrab.grab(bbox=(self.geometry().x(), self.geometry().y(),
-                                          self.geometry().x() + self.geometry().width(),
-                                          self.geometry().y() + self.geometry().height()))
+        if self.isVisible():
+            # 開始測量capture時間
+            capture_start = time.time()
 
-        # Perform OCR using Google Cloud Vision on the screenshot
-        self.perform_ocr(screenshot)
+            # Capture the screen content within the window's geometry
+            screenshot = ImageGrab.grab(bbox=(self.geometry().x(), self.geometry().y(),
+                                                self.geometry().x() + self.geometry().width(),
+                                                self.geometry().y() + self.geometry().height()))
+
+            # Perform OCR using Google Cloud Vision on the screenshot
+            self.perform_ocr(screenshot)
 
     def closeEvent(self, event):
         # Stop the timer when the screen capture window is closed
         self.timer.stop()
         event.accept()
+        self.closed.emit()  # Emit the signal when the window is closed
 
     def perform_ocr(self, screenshot):
         # Save the screenshot to an in-memory buffer as a JPEG image
@@ -197,8 +217,6 @@ class ScreenCaptureWindow(QMainWindow):
         else:
             print("No text detected in the image.")
   
-
-
 
 if __name__ == "__main__":
 
