@@ -11,7 +11,7 @@ from google.cloud import translate_v2 as translate
 
 import time
 
-class Window(QMainWindow):
+class ScreenCaptureWindow(QMainWindow):
   
     def __init__(self):
         super().__init__()
@@ -22,12 +22,15 @@ class Window(QMainWindow):
         self.setWindowOpacity(0.5)
   
         # setting  the geometry of window
-        self.setGeometry(60, 60, 600, 400)
+        screen_geometry = QApplication.primaryScreen().geometry()
+        self.setGeometry(screen_geometry.left() + screen_geometry.width() // 4, 
+                         screen_geometry.top() + screen_geometry.height() // 2,
+                         screen_geometry.width() // 2, screen_geometry.height() // 3)
 
         # Create a timer to capture the screen every second
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.capture_screen)
-        self.timer.start(2000)  # Capture every 1000 milliseconds (1 second)
+        self.timer.start(10000)  # Capture every 1000 milliseconds (1 second)
 
         # show all the widgets
         self.show()
@@ -36,7 +39,6 @@ class Window(QMainWindow):
         global capture_start
         # 開始測量capture時間
         capture_start = time.time()
-        print("timer countdown時間： %f 秒" % (capture_start))
 
         # Capture the screen content within the window's geometry
         screenshot = ImageGrab.grab(bbox=(self.geometry().x(), self.geometry().y(),
@@ -45,6 +47,11 @@ class Window(QMainWindow):
 
         # Perform OCR using Google Cloud Vision on the screenshot
         self.perform_ocr(screenshot)
+
+    def closeEvent(self, event):
+        # Stop the timer when the screen capture window is closed
+        self.timer.stop()
+        event.accept()
 
     def perform_ocr(self, screenshot):
         # Save the screenshot to an in-memory buffer as a JPEG image
@@ -84,7 +91,7 @@ class Window(QMainWindow):
             translated_lines = []
 
             # 逐行翻譯
-            target_language = "zh-TW"  # 將此替換為你想要的目標語言代碼（例如：英文 --> en）
+            target_language = "en"  # 將此替換為你想要的目標語言代碼（例如：英文 --> en）
             for line in lines:
                 translated_line = client_translate.translate(
                     line, target_language=target_language
@@ -104,13 +111,66 @@ class Window(QMainWindow):
             print("Screen Capture時間： %f 秒" % (capture_end - capture_start))
             print("OCR辨識時間： %f 秒" % (detected_end - detected_start))
             print("translation時間： %f 秒" % (trans_end - trans_start))
-            tmp = trans_end
             print("----------------------------------------")
             
-
         else:
             print("No text detected in the image.")
   
+
+class MainRecordingWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        # Set the title
+        self.setWindowTitle("Main Control Windows")
+
+        # Set the window background color to black
+        palette = QPalette()
+        palette.setColor(QPalette.Window, QColor(0, 0, 0))
+        self.setPalette(palette)
+
+        # Set the window opacity
+        self.setWindowOpacity(0.7)
+
+        # Set the window geometry
+        screen_geometry = QApplication.primaryScreen().geometry()
+        self.setGeometry(screen_geometry.x() + (screen_geometry.width() // 3) * 2, 
+                         screen_geometry.y() + screen_geometry.height() // 3,
+                         screen_geometry.width() // 4, screen_geometry.height() // 2)
+
+        # Create a Add button to create the screen_capture_window
+        #self.Add_button = QPushButton("ADD Window", self)
+        #self.Add_button.clicked.connect(self.start_screen_capture)
+
+        # Create a recording button to start screen capture
+        self.record_button = QPushButton("Record", self)
+        self.record_button.clicked.connect(self.start_screen_capture)
+
+        # Create a stop button to stop screen capture
+        stop_button = QPushButton("Stop", self)
+
+        # Set button backgrounds to transparent
+        self.record_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
+        stop_button.setStyleSheet('QPushButton {background-color: transparent; color: red;}')
+
+        # Create a vertical layout to accommodate the buttons
+        layout = QVBoxLayout()
+        layout.addWidget(self.record_button)
+        layout.addWidget(stop_button)
+
+        # Create a QWidget as a container for the layout
+        widget = QWidget(self)
+        widget.setLayout(layout)
+
+        # Add the QWidget to the main window
+        self.setCentralWidget(widget)
+
+    def start_screen_capture(self):
+        # Create and show the screen capture window
+        self.screen_capture_window = ScreenCaptureWindow()
+        self.screen_capture_window.show()
+
+
 
 if __name__ == "__main__":
 
@@ -127,8 +187,13 @@ if __name__ == "__main__":
     # create pyqt5 app
     App = QApplication(sys.argv)
     
-    # create the instance of our Window
-    window = Window()
+    # Create the screen capture window and the main recording control window
+    #screen_capture_window = ScreenCaptureWindow()
+    main_recording_window = MainRecordingWindow()
+
+    # Show the windows
+    #screen_capture_window.show()
+    main_recording_window.show()
     
     # start the app
     sys.exit(App.exec())
