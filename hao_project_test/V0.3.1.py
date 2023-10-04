@@ -36,7 +36,7 @@ class MaincapturingWindow(QMainWindow):
                          screen_geometry.width() // 4, screen_geometry.height() // 3)
         
         # Fix the window size (cannot be resized)
-        #self.setFixedSize(self.size())
+        self.setFixedSize(self.size())
 
         # Create a button to add or check the screen capture window
         self.add_window_button = QPushButton("Add Screen Capture Window", self)
@@ -57,18 +57,14 @@ class MaincapturingWindow(QMainWindow):
         self.ocr_label.setAutoFillBackground(True)  # 允许设置背景颜色
         self.ocr_text_label = QLabel("", self)
         self.ocr_text_label.setAutoFillBackground(True)  # 允许设置背景颜色
-        # 设置左侧和右侧的缩进，以限制文本显示范围
-        self.ocr_text_label.setIndent(10)  # 设置左侧缩进
-        self.ocr_text_label.setStyleSheet("QLabel { padding-right: 10px; }")  # 设置右侧缩进
+        self.ocr_text_label.setWordWrap(True)  # 启用自动换行
 
         # 创建用于显示翻译后文本的QLabel
         self.translation_label = QLabel("Translation:", self)
         self.translation_label.setAutoFillBackground(True)  # 允许设置背景颜色
         self.translation_text_label = QLabel("", self)
         self.translation_text_label.setAutoFillBackground(True)  # 允许设置背景颜色
-        # 设置左侧和右侧的缩进，以限制文本显示范围
-        self.translation_text_label.setIndent(10)  # 设置左侧缩进
-        self.translation_text_label.setStyleSheet("QLabel { padding-right: 10px; }")  # 设置右侧缩进
+        self.translation_text_label.setWordWrap(True)  # 启用自动换行
 
         # 创建一个QPalette对象来设置颜色
         text_label_palette = QPalette()
@@ -79,7 +75,7 @@ class MaincapturingWindow(QMainWindow):
 
         # 创建一个QFont对象来设置文字大小
         font = QFont()
-        font.setPointSize(16)  # 设置文字大小为14
+        font.setPointSize(18)  # 设置文字大小为14
         self.ocr_label.setFont(font)
         self.translation_label.setFont(font)
         self.ocr_text_label.setFont(font)
@@ -282,6 +278,7 @@ class ScreenCaptureWindow(QMainWindow):
         image = vision_v1.Image(content=screenshot_bytes)
         response = client_vision.text_detection(image=image)
         texts = response.text_annotations
+        print(texts)
 
         # 提取辨識到的文字
         if texts:
@@ -296,30 +293,18 @@ class ScreenCaptureWindow(QMainWindow):
             # translation 測量開始
             trans_start = time.time()
 
-            # 將辨識的文字按行分割
-            lines = detected_text.split("\n")
-
-            # 初始化翻譯後的行列表
-            translated_lines = []
-
             # 逐行翻譯
             target_language = "zh-TW"  # 將此替換為你想要的目標語言代碼（例如：英文 --> en, 繁體中文 --> zh-TW）
-            for line in lines:
-                translated_line = client_translate.translate(
-                    line, 
+            translated_line = client_translate.translate(
+                    detected_text, 
                     target_language=target_language,
                 )
 
-                # Unescape HTML entities
-                text = translated_line["translatedText"]
-
-                translated_lines.append(html.unescape(text))
-
-            # 將翻譯後的行重新組合成一個帶有換行的字符串
-            translated_text_with_newlines = "\n".join(translated_lines)
+            # Unescape HTML entities
+            text = translated_line["translatedText"]
 
             # 设置翻译文本
-            main_capturing_window.translation_text_label.setText(translated_text_with_newlines)
+            main_capturing_window.translation_text_label.setText(html.unescape(text))
 
             # translation 測量結束
             trans_end = time.time()
