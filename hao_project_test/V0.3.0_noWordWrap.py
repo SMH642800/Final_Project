@@ -34,9 +34,6 @@ class MaincapturingWindow(QMainWindow):
         self.setGeometry(screen_geometry.x() + (screen_geometry.width() // 3) * 2, 
                          screen_geometry.y() + screen_geometry.height() // 3,
                          screen_geometry.width() // 4, screen_geometry.height() // 3)
-        
-        # Fix the window size (cannot be resized)
-        #self.setFixedSize(self.size())
 
         # Create a button to add or check the screen capture window
         self.add_window_button = QPushButton("Add Screen Capture Window", self)
@@ -54,23 +51,21 @@ class MaincapturingWindow(QMainWindow):
 
         # 创建用于显示OCR识别文本的QLabel
         self.ocr_label = QLabel("OCR Recognized Text:", self)
-        self.ocr_label.setAutoFillBackground(True)  # 允许设置背景颜色
+        self.ocr_label.setAutoFillBackground(False)  # 设置背景颜色為透明
+        self.ocr_label.setStyleSheet("color: white;")  # 設置文字顏色為白色
         self.ocr_text_label = QLabel("", self)
         self.ocr_text_label.setAutoFillBackground(True)  # 允许设置背景颜色
-        # 设置左侧和右侧的缩进，以限制文本显示范围
-        self.ocr_text_label.setIndent(10)  # 设置左侧缩进
-        self.ocr_text_label.setStyleSheet("QLabel { padding-right: 10px; }")  # 设置右侧缩进
+        self.ocr_text_label.setContentsMargins(10, 10, 10, 10)  # 設置距離最左、最右、最上、最下的內邊距為 10px
 
         # 创建用于显示翻译后文本的QLabel
         self.translation_label = QLabel("Translation:", self)
-        self.translation_label.setAutoFillBackground(True)  # 允许设置背景颜色
+        self.translation_label.setStyleSheet("color: white;")  # 設置文字顏色為白色
+        self.translation_label.setAutoFillBackground(False)  # 设置背景颜色為透明
         self.translation_text_label = QLabel("", self)
         self.translation_text_label.setAutoFillBackground(True)  # 允许设置背景颜色
-        # 设置左侧和右侧的缩进，以限制文本显示范围
-        self.translation_text_label.setIndent(10)  # 设置左侧缩进
-        self.translation_text_label.setStyleSheet("QLabel { padding-right: 10px; }")  # 设置右侧缩进
+        self.translation_text_label.setContentsMargins(10, 10, 10, 10)  # 設置距離最左、最右、最上、最下的內邊距為 10px
 
-        # 创建一个QPalette对象来设置颜色
+        # 创建一个QPalette对象来设置 OCR_result_text 的背景及文字颜色
         text_label_palette = QPalette()
         text_label_palette.setColor(QPalette.Window, QColor(50, 50, 50))  # 设置背景颜色为浅灰色
         text_label_palette.setColor(QPalette.WindowText, QColor(255, 255, 255))  # 设置文字颜色为白色
@@ -118,7 +113,8 @@ class MaincapturingWindow(QMainWindow):
         self.setCentralWidget(widget)
 
         # 设置窗口标志，使其始终显示在最上面
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        #self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         # Initialize the attribute
         self.screen_capture_window = None  
@@ -141,11 +137,15 @@ class MaincapturingWindow(QMainWindow):
         
     def start_capture(self):
         if hasattr(self, 'screen_capture_window') and self.screen_capture_window:
-            self.capturing = True
+            self.capturing = True 
             self.action_button.setText("Stop")
             self.action_button.clicked.disconnect()
             self.action_button.clicked.connect(self.stop_capture)
             self.screen_capture_window.start_capture()
+
+            # 移除screen_capture_window的最上层标志
+            self.screen_capture_window.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+            self.screen_capture_window.show()
         else:
             QMessageBox.information(self, "Info", "You haven't opened the Screen Capture Window yet.")
 
@@ -156,6 +156,10 @@ class MaincapturingWindow(QMainWindow):
             self.action_button.clicked.disconnect()
             self.action_button.clicked.connect(self.toggle_capture)
             self.screen_capture_window.stop_capture()
+
+            # 恢复screen_capture_window的最上层标志
+            self.screen_capture_window.setWindowFlag(Qt.WindowStaysOnTopHint)
+            self.screen_capture_window.show()
 
     def handle_screen_capture_window_closed(self):
         # Slot to handle the screen capture window being closed
@@ -180,7 +184,7 @@ class ScreenCaptureWindow(QMainWindow):
         self.setWindowTitle("Screen Capture region")
 
         # 設置視窗的特明度
-        self.setWindowOpacity(0.5)
+        self.setWindowOpacity(0.7)
 
         # 创建一个水平布局管理器
         layout = QHBoxLayout()
@@ -197,7 +201,6 @@ class ScreenCaptureWindow(QMainWindow):
 
         # plot the border of the window
         self.border_frame = QFrame(self)
-        #self.border_frame.setGeometry(0, 0,  self.width(), self.height())
         self.border_frame.setFrameShape(QFrame.Box)
         self.border_frame.setStyleSheet('QFrame { border: 3px solid red; }')
 
@@ -213,6 +216,10 @@ class ScreenCaptureWindow(QMainWindow):
         
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.capture_screen)
+
+        # 设置窗口标志，使其始终显示在最上面
+        #self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         # show all the widgets
         self.show()
@@ -234,16 +241,24 @@ class ScreenCaptureWindow(QMainWindow):
         self.timer.start(2000)  # Capture every 2000 milliseconds (2 second)
 
         # 更改窗口透明度和边界线条
-        self.setWindowOpacity(0.1)
+        self.setWindowOpacity(0)
         self.border_frame.hide()
+
+        # 切换为无框窗口
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.show()
 
     def stop_capture(self):
         self.timer.stop()
         QMessageBox.information(self, "Info", "Screen capture stopped.")
 
         # 恢复窗口透明度和边界线条
-        self.setWindowOpacity(0.5)
+        self.setWindowOpacity(0.7)
         self.border_frame.show()
+
+        # 切换回有框窗口
+        self.setWindowFlags(Qt.Window)
+        self.show()
 
     def capture_screen(self):
         global capture_start
