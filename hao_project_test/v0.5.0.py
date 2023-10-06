@@ -14,6 +14,8 @@ import pyscreenshot as ImageGrab
 from google.cloud import vision_v1
 from google.cloud import translate_v2 as translate
 
+from settings_v1 import SettingsWindow
+
 import time
 
 class MaincapturingWindow(QMainWindow):
@@ -38,7 +40,7 @@ class MaincapturingWindow(QMainWindow):
                          screen_geometry.width() // 4, screen_geometry.height() // 3)
 
         # Create a button to add the screen capture window
-        self.add_window_button = QPushButton("Add Screen Capture Window", self)
+        self.add_window_button = QPushButton("Add Capture Window", self)
         self.add_window_button.clicked.connect(self.add_or_check_screen_capture_window)
 
         # Create a capturing button to start screen capture
@@ -47,15 +49,20 @@ class MaincapturingWindow(QMainWindow):
         self.capturing = False  # Track capturing state
 
         # Create a button to pin the window on the toppest
-        self.pin_button = QPushButton("not pin on top", self)
+        self.pin_button = QPushButton("not pin", self)
         self.pin_button.clicked.connect(self.pin_on_top)
         self.is_pined = True  # Track pining state
+
+        # Create a button to open settings window
+        self.settings_button = QPushButton("Settings", self)
+        self.settings_button.clicked.connect(self.show_settings)
 
         # Set button backgrounds to transparent
         #self.add_window_button.setStyleSheet('QPushButton {background-color: transparent; color: red;}')
         self.add_window_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
         self.action_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
         self.pin_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
+        self.settings_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
 
         # 创建用于显示OCR识别文本的QLabel
         self.ocr_label = QLabel("OCR Recognized Text:", self)
@@ -96,6 +103,7 @@ class MaincapturingWindow(QMainWindow):
         button_layout.addWidget(self.add_window_button)
         button_layout.addWidget(self.action_button)
         button_layout.addWidget(self.pin_button)
+        button_layout.addWidget(self.settings_button)
 
         # Add the horizontal button layout to the vertical layout
         layout.addLayout(button_layout)
@@ -136,18 +144,22 @@ class MaincapturingWindow(QMainWindow):
     def pin_on_top(self):
         if self.is_pined:
             self.is_pined = False 
-            self.pin_button.setText("pin on top")
+            self.pin_button.setText("pin")
 
             # 移除screen_capture_window的最上层标志
             self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
             self.show()
         else:
             self.is_pined = True 
-            self.pin_button.setText("not pin on top")
+            self.pin_button.setText("not pin")
 
             # 恢复screen_capture_window的最上层标志
             self.setWindowFlag(Qt.WindowStaysOnTopHint)
             self.show()
+
+    def show_settings(self):
+        self.settings_window = SettingsWindow()
+        self.settings_window.show()
 
     def add_or_check_screen_capture_window(self):
         # Check if a screen capture window is already open
