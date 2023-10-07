@@ -91,7 +91,7 @@ class MaincapturingWindow(QMainWindow):
         self.ocr_text_label.setPalette(text_label_palette)
         self.translation_text_label.setPalette(text_label_palette)
 
-        # 创建一个QFont对象来设置文字大小
+        # 讀取 config file 中的 text_font_size
         text_font_size = self.config['Settings']['text_font_size']
         self.update_text_font_size(text_font_size)
 
@@ -107,14 +107,6 @@ class MaincapturingWindow(QMainWindow):
 
         # Add the horizontal button layout to the vertical layout
         layout.addLayout(button_layout)
-
-        # Calculate the height based on font size
-        font_metrics = QFontMetrics(font)
-        label_height = font_metrics.height()
-
-        # Set the height of ocr_label and translation_label to match font size
-        self.ocr_label.setFixedHeight(label_height)
-        self.translation_label.setFixedHeight(label_height)
 
         # Add ocr_label and translation_label to the layout
         layout.addWidget(self.ocr_label)
@@ -159,6 +151,7 @@ class MaincapturingWindow(QMainWindow):
 
     def show_settings(self):
         self.settings_window = SettingsWindow(self.config)
+        self.settings_window.setting_window_closed.connect(self.set_main_and_capture_window_frame_window_back)
         self.settings_window.show()
 
         # main_window 切换成無框窗口
@@ -178,6 +171,14 @@ class MaincapturingWindow(QMainWindow):
         self.translation_label.setFont(font)
         self.ocr_text_label.setFont(font)
         self.translation_text_label.setFont(font)
+
+        # Calculate the height based on font size
+        font_metrics = QFontMetrics(font)
+        label_height = font_metrics.height()
+
+        # Set the height of ocr_label and translation_label to match font size
+        self.ocr_label.setFixedHeight(label_height)
+        self.translation_label.setFixedHeight(label_height)
 
     def add_or_check_screen_capture_window(self):
         # Check if a screen capture window is already open
@@ -216,6 +217,25 @@ class MaincapturingWindow(QMainWindow):
             # 恢复screen_capture_window的最上层标志
             self.screen_capture_window.setWindowFlag(Qt.WindowStaysOnTopHint)
             self.screen_capture_window.show()
+
+    def set_main_and_capture_window_frame_window_back(self):
+        # main_window 切换成有框窗口
+        self.setWindowFlags(Qt.Window)
+        # 恢复main_capture_window的最上层标志
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
+        self.show()
+
+        # 如果screen_capture_window存在, 一併切换成有框窗口
+        if hasattr(self, 'screen_capture_window') and self.screen_capture_window:
+            self.screen_capture_window.setWindowFlags(Qt.Window)
+            # 恢复screen_capture_window的最上层标志
+            self.screen_capture_window.setWindowFlag(Qt.WindowStaysOnTopHint)
+            self.screen_capture_window.show()
+
+        # 讀取 config file 中的 text_font_size
+        text_font_size = self.config['Settings']['text_font_size']
+        self.update_text_font_size(text_font_size)
+
 
     def handle_screen_capture_window_closed(self):
         # Slot to handle the screen capture window being closed

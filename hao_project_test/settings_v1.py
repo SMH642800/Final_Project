@@ -1,17 +1,31 @@
+import os
 import sys
+import toml
+import json
+import configparser
 from PySide6.QtCore import * 
 from PySide6.QtGui import * 
 from PySide6.QtWidgets import * 
 
+
 # 创建一个新的类以用于设置窗口
 class SettingsWindow(QDialog):
-    def __init__(self):
+    # Create a custom signal for closed event
+    setting_window_closed = Signal()
+
+    def __init__(self, config):
         super().__init__()
+
+        # 讀取 config file
+        self.config = config
+
+        # 設置參數
+        self._text_font_size = self.config['Settings']['text_font_size']
 
         # 设置窗口标题和属性
         self.setWindowTitle("設定")
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)  # 使设置窗口始终位于顶层
-        self.resize(400, 300)  # 視窗大小 400 x 300
+        self.resize(300, 200)  # 視窗大小 400 x 300
         self.center()  # 視窗顯示在螢幕正中間
 
         # Create a top-level layout
@@ -42,9 +56,9 @@ class SettingsWindow(QDialog):
         # 创建文本大小下拉框
         text_size_label = QLabel("文字大小:")
         text_size_combo = QComboBox()
-        for size in range(10, 21, 2):
-            text_size_combo.addItem(str(size))
-        text_size_combo.setCurrentText("14")  # 设置默认文本大小
+        for text_size in range(10, 25, 2):
+            text_size_combo.addItem(str(text_size))
+        text_size_combo.setCurrentText(str(self._text_font_size))  # 設置文本字體大小
         text_size_combo.currentTextChanged.connect(self.update_text_size)
 
         # 创建文本颜色按钮
@@ -52,12 +66,28 @@ class SettingsWindow(QDialog):
         text_color_button = QPushButton("選擇顏色")
         text_color_button.clicked.connect(self.choose_text_color)
 
-        # 将小部件添加到文本设置布局
+        # 创建 text_size 水平布局
+        text_size_layout = QHBoxLayout()
+
+        # 将文本大小标签和下拉框添加到水平布局
+        text_size_layout.addWidget(text_size_label)
+        text_size_layout.addWidget(text_size_combo)
+
+        # 创建 text_color 水平布局
+        text_color_layout = QHBoxLayout()
+
+        # 将文本大小标签和下拉框添加到水平布局
+        text_color_layout.addWidget(text_color_label)
+        text_color_layout.addWidget(text_color_button)
+
+        # Create a vertical layout
         layout = QVBoxLayout()
-        layout.addWidget(text_size_label)
-        layout.addWidget(text_size_combo)
-        layout.addWidget(text_color_label)
-        layout.addWidget(text_color_button)
+
+        # Add the horizontal button layout to the vertical layout
+        layout.addLayout(text_size_layout)
+        layout.addLayout(text_color_layout)
+
+        # 设置水平布局作为文本设置的布局
         text_settings.setLayout(layout)
 
         return text_settings
@@ -66,7 +96,7 @@ class SettingsWindow(QDialog):
         # 创建一个用于辨识设置的 QWidget
         recognition_settings = QWidget()
 
-        # 创建辨识频率下拉框
+        # 建立辨識頻率的下拉式選單
         frequency_label = QLabel("辨識頻率:")
         frequency_combo = QComboBox()
         frequency_combo.addItem("高 (1 秒)")
@@ -75,21 +105,10 @@ class SettingsWindow(QDialog):
         frequency_combo.setCurrentIndex(1)  # 设置默认频率
         frequency_combo.currentIndexChanged.connect(self.update_recognition_frequency)
 
-        # 创建辨識靈敏度下拉框
-        sensitivity_label = QLabel("辨識靈敏度:")
-        sensitivity_combo = QComboBox()
-        sensitivity_combo.addItem("低 (0.6)")
-        sensitivity_combo.addItem("普通 (0.75)")
-        sensitivity_combo.addItem("高 (0.9)")
-        sensitivity_combo.setCurrentIndex(1)  # 设置默认靈敏度
-        sensitivity_combo.currentIndexChanged.connect(self.update_recognition_sensitivity)
-
         # 将小部件添加到辨識设置布局
         layout = QVBoxLayout()
         layout.addWidget(frequency_label)
         layout.addWidget(frequency_combo)
-        layout.addWidget(sensitivity_label)
-        layout.addWidget(sensitivity_combo)
         recognition_settings.setLayout(layout)
 
         return recognition_settings
@@ -99,11 +118,11 @@ class SettingsWindow(QDialog):
         system_settings = QWidget()
 
         # 创建一个按钮以设置 Google 凭证
-        set_credentials_button = QPushButton("設定 Google 凭证")
+        set_credentials_button = QPushButton("設定 Google 憑證")
         set_credentials_button.clicked.connect(self.set_google_credentials)
 
         # 创建一个到凭证教程的链接
-        credentials_link = QLabel('<a href="file:///path/to/your/tutorial.html">取得凭证教程</a>')
+        credentials_link = QLabel('<a href="file:///path/to/your/tutorial.html">取得 Google 憑證教學</a>')
         credentials_link.setOpenExternalLinks(True)
 
         # 将小部件添加到系統设置布局
@@ -118,28 +137,38 @@ class SettingsWindow(QDialog):
         # 创建一个用于“关于”页面的 QWidget
         about_page = QWidget()
 
-        # 创建包含版本和作者信息的标签
+        # 建立版本訊息、作者名稱、使用說明連結、Github連結
         version_label = QLabel("版本: 1.0")
-        author_label = QLabel("作者: 你的名字")
+        author_label = QLabel("作者: Hsieh Meng-Hao")
+        manual_link_label = QLabel('<a href="file:///path/to/your/manual.html">使用說明</a>')
+        github_link_label = QLabel('<a href="https://github.com/your/repo">GitHub</a>')
 
-        # 创建用于其他信息的文本浏览器
-        text_browser = QTextBrowser()
-        text_browser.setOpenExternalLinks(True)
-        text_browser.setHtml('<a href="file:///path/to/your/manual.html">用户手册</a><br><a href="https://github.com/your/repo">GitHub</a>')
+        # 創建一條水平線以隔開 label
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        line.setLineWidth(2)  # 設置線條寬度為 2px
 
         # 将小部件添加到“关于”页面布局
         layout = QVBoxLayout()
         layout.addWidget(version_label)
         layout.addWidget(author_label)
-        layout.addWidget(text_browser)
+        layout.addWidget(line)
+        layout.addWidget(manual_link_label)
+        layout.addWidget(github_link_label)
         about_page.setLayout(layout)
 
         return about_page
 
-    def update_text_size(self, text):
-        # 根据用户选择的文本大小更新应用程序中的文本大小
-        # 您可以使用 'text' 变量来访问所选的大小
-        pass
+    def update_text_size(self, selected_font_size):
+        # 更新文本字體大小
+        self._text_font_size = int(selected_font_size)
+        
+        # 保存用户设置到JSON配置文件
+        self.config["Settings"]["text_font_size"] = self._text_font_size
+        with open("config.toml", "w") as config_file:
+            toml.dump(self.config, config_file)
+        
 
     def choose_text_color(self):
         # 打开颜色对话框，并根据用户的选择设置文本颜色
@@ -175,11 +204,17 @@ class SettingsWindow(QDialog):
             # 根据文件路径设置 Google 凭证
             pass
 
+    def closeEvent(self, event):
+        self.setting_window_closed.emit()
+        event.accept()
+
 
 # 主应用程序窗口
 class MaincapturingWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
+
+        self.config = config
 
         # 设置标题
         self.setWindowTitle("主控制窗口")
@@ -191,15 +226,32 @@ class MaincapturingWindow(QMainWindow):
         self.settings_button.clicked.connect(self.show_settings)
 
     def show_settings(self):
-        self.settings_window = SettingsWindow()
+        self.settings_window = SettingsWindow(self.config)
         self.settings_window.show()
 
 # ... 其余的代码 ...
 
 if __name__ == "__main__":
+    # 檢查是否有 config file
+    if not os.path.exists("config.toml"):
+        # 如果文件不存在，创建默认配置
+        default_config = {
+            "Settings": {
+                "text_font_size": 14,
+                "text_color": "white"
+                # 添加其他配置项
+            }
+        }
+        with open("config.toml", "w") as config_file:
+            toml.dump(default_config, config_file)
+
+    # 載入 config
+    with open("config.toml", "r") as config_file:
+        config = toml.load(config_file)
+
     App = QApplication([])
 
-    main_capturing_window = MaincapturingWindow()
+    main_capturing_window = MaincapturingWindow(config)
     main_capturing_window.show()
 
     sys.exit(App.exec())
