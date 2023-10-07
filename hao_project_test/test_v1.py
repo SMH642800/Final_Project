@@ -23,6 +23,9 @@ class MaincapturingWindow(QMainWindow):
     def __init__(self, config):
         super().__init__()
 
+        # set private member
+        self._frequency = ""
+
         # Set the title
         self.setWindowTitle("Main Control Windows")
 
@@ -95,6 +98,10 @@ class MaincapturingWindow(QMainWindow):
         # 讀取 config file 中的 text_font_size
         text_font_color = self.config['Settings']['text_font_color']
         self.update_text_font_color(text_font_color)
+
+        # 讀取 config file 中的 text_font_size
+        frequency = self.config['Settings']['frequency']
+        self.update_recognition_frequency(frequency)
 
         # Create a vertical layout
         layout = QVBoxLayout()
@@ -191,6 +198,10 @@ class MaincapturingWindow(QMainWindow):
         self.ocr_text_label.setPalette(self.text_label_palette)
         self.translation_text_label.setPalette(self.text_label_palette)
 
+    def update_recognition_frequency(self, new_frequency):
+        # Update Frequency
+        self._frequency = new_frequency
+
     def add_or_check_screen_capture_window(self):
         # Check if a screen capture window is already open
         if hasattr(self, 'screen_capture_window') and self.screen_capture_window:
@@ -249,12 +260,17 @@ class MaincapturingWindow(QMainWindow):
         # 讀取 config file 中的 text_font_size
         text_font_size = self.config['Settings']['text_font_size']
         text_font_color = self.config['Settings']['text_font_color']
+        frequency = self.config['Settings']['frequency']
         self.update_text_font_size(text_font_size)
         self.update_text_font_color(text_font_color)
+        self.update_recognition_frequency(frequency)
 
     def handle_screen_capture_window_closed(self):
         # Slot to handle the screen capture window being closed
         self.screen_capture_window = None
+
+    def get_frequncy(self):
+        return self._frequency
 
     def closeEvent(self, event):
         # Check if the screen_capture_window is open and close it
@@ -308,8 +324,13 @@ class ScreenCaptureWindow(QMainWindow):
         # 将 widget 设置为主窗口的中心部件
         self.setCentralWidget(container_widget)
         
+        # 一般擷取計時器
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.capture_screen)
+        
+        # 強制擷取計時器
+        self.force_update_timer = QTimer(self)
+        self.force_update_timer.timeout.connect(self.force_update)
 
         # 设置窗口标志，使其始终显示在最上面
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -331,7 +352,20 @@ class ScreenCaptureWindow(QMainWindow):
         self.border_frame.setGeometry(0, 0, new_width, new_height)
 
     def start_capture(self):
-        self.timer.start(1000)  # Capture every 2000 milliseconds (2 second)
+        match main_capturing_window.get_frequncy():
+            case "高 (1 秒)":
+                self.timer.start(1000)  # Capture every 1000 milliseconds (1 second)
+
+            case "標準 (2 秒)":
+                self.timer.start(2000)  # Capture every 2000 milliseconds (2 second)
+
+            case "慢 (3 秒)":
+                self.timer.start(3000)  # Capture every 5000 milliseconds (5 second)
+        
+            case _:
+                self.timer.start(2000)  # Capture every 2000 milliseconds (2 second)
+        
+        print(main_capturing_window.get_frequncy())
 
         # 更改窗口透明度和边界线条
         self.setWindowOpacity(0)
@@ -369,6 +403,9 @@ class ScreenCaptureWindow(QMainWindow):
             if self.is_similar_to_previous(screenshot):
                 print("画面相似度高，不需要进行 OCR 辨识")
             else:
+                # 启动强制更新计时器
+                self.force_update_timer.start(5000) # 強制 5 秒更新一次
+
                 # Perform OCR using Google Cloud Vision on the screenshot
                 self.perform_ocr(screenshot)
 
@@ -384,11 +421,17 @@ class ScreenCaptureWindow(QMainWindow):
             print("匹配度：", max_similarity)
 
             # 设定相似度阈值，可以根据具体需求调整
-            similarity_threshold = 0.95  # 这里设定一个较高的阈值
+            similarity_threshold = 0.75  # 这里设定一个普通的阈值
 
             if max_similarity >= similarity_threshold:
                 return True  # 与上一次图像相似
-        return False  # 与上一次图像不相似
+            return False  # 与上一次图像不相似
+    
+    def force_update(self):
+        print("强制更新")
+        self.perform_ocr(ImageGrab.grab(bbox=(self.geometry().x(), self.geometry().y(),
+                                            self.geometry().x() + self.geometry().width(),
+                                            self.geometry().y() + self.geometry().height())))
 
     def closeEvent(self, event):
         # Stop the timer when the screen capture window is closed
@@ -481,7 +524,7 @@ if __name__ == "__main__":
             "Settings": {
                 "text_font_size": 14,
                 "text_font_color": "#FFFFFF",
-                # 添加其他配置项
+                "frequency": "標準 (2 秒)",
             }
         }
         with open("config.toml", "w") as config_file:

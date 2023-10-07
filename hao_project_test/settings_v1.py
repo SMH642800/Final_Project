@@ -26,6 +26,7 @@ class SettingsWindow(QDialog):
         self._text_font_size = self.config['Settings']['text_font_size']
         self._text_font_color = self.config['Settings']['text_font_color']
         self._text_font_color_name = self._text_font_color
+        self._frequency = self.config['Settings']['frequency']
 
         # 设置窗口标题和属性
         self.setWindowTitle("設定")
@@ -125,8 +126,19 @@ class SettingsWindow(QDialog):
         frequency_combo = QComboBox()
         frequency_combo.addItem("高 (1 秒)")
         frequency_combo.addItem("標準 (2 秒)")
-        frequency_combo.addItem("慢 (5 秒)")
-        frequency_combo.setCurrentIndex(1)  # 设置默认频率
+        frequency_combo.addItem("慢 (3 秒)")
+        match self._frequency:
+            case "高 (1 秒)":
+                frequency_combo.setCurrentIndex(0)  
+
+            case "標準 (2 秒)":
+                frequency_combo.setCurrentIndex(1)  
+
+            case "慢 (3 秒)":
+                frequency_combo.setCurrentIndex(2)  
+        
+            case _:
+                frequency_combo.setCurrentIndex(0)  
         frequency_combo.currentIndexChanged.connect(self.update_recognition_frequency)
 
         # 将小部件添加到辨識设置布局
@@ -214,21 +226,31 @@ class SettingsWindow(QDialog):
                 f'background-color: {hex_color};' # 更新顏色
             )
 
-            # 保存用户设置到JSON配置文件
+            # 保存用户设置到 TOML 配置文件
             self._text_font_color = hex_color
             self.config["Settings"]["text_font_color"] = self._text_font_color
             with open("config.toml", "w") as config_file:
                 toml.dump(self.config, config_file)
 
-    def update_recognition_frequency(self, index):
-        # 根据用户选择的频率更新辨识频率
-        # 您可以使用 'index' 变量来访问所选的索引
-        pass
+    def update_recognition_frequency(self, selected_frequency):
+        # 更新偵測的頻率
+        match selected_frequency:
+            case 0:
+                self._frequency = "高 (1 秒)"
 
-    def update_recognition_sensitivity(self, index):
-        # 根据用户选择的靈敏度更新辨識靈敏度
-        # 您可以使用 'index' 变量来访问所选的索引
-        pass
+            case 1:
+                self._frequency = "標準 (2 秒)"
+
+            case 2:
+                self._frequency = "慢 (3 秒)" 
+
+            case _:
+                self._frequency = "標準 (2 秒)"
+        
+        # 保存用户设置到 TOML 配置文件
+        self.config["Settings"]["frequency"] = self._frequency
+        with open("config.toml", "w") as config_file:
+            toml.dump(self.config, config_file)
 
     def set_google_credentials(self):
         # 打开一个文件对话框，让用户选择 Google 凭证文件
@@ -281,8 +303,8 @@ if __name__ == "__main__":
         default_config = {
             "Settings": {
                 "text_font_size": 14,
-                "text_color": "white"
-                # 添加其他配置项
+                "text_color": "white",
+                "frequency": "標準 (2 秒)",
             }
         }
         with open("config.toml", "w") as config_file:
