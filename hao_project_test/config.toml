@@ -1,4 +1,5 @@
 [Settings]
-text_font_size = 16
-text_font_color = "#ffffff"
-frequency = "高 (1 秒)"
+text_font_size = 14
+text_font_color = "#FFFFFF"
+frequency = "標準 (2 秒)"
+google_cloud_key_file_path = "/Users/menghao/Final_Project/hao_project_test/manifest-surfer-400014-6ed9f85a5367.json"

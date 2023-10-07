@@ -3,7 +3,7 @@
 import os
 import sys
 import toml
-import json
+import shutil
 import configparser
 from PySide6.QtCore import * 
 from PySide6.QtGui import * 
@@ -29,6 +29,7 @@ class SettingsWindow(QDialog):
         self._text_font_color = self.config['Settings']['text_font_color']
         self._text_font_color_name = self._text_font_color
         self._frequency = self.config['Settings']['frequency']
+        self._google_credentials = self.config['Settings']['google_cloud_key_file_path']
 
         # 设置窗口标题和属性
         self.setWindowTitle("設定")
@@ -262,63 +263,29 @@ class SettingsWindow(QDialog):
         file_dialog.setViewMode(QFileDialog.ViewMode.List)
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
         file_dialog.setWindowTitle("选择 Google 凭证文件")
-        file_dialog.exec()
+        #file_dialog.exec()
 
         # 获取所选文件路径并根据文件路径设置 Google 凭证
-        selected_files = file_dialog.selectedFiles()
-        if selected_files:
-            credentials_file = selected_files[0]  # 获取第一个选择的文件
-            # 根据文件路径设置 Google 凭证
-            pass
+        if file_dialog.exec():
+            selected_files = file_dialog.selectedFiles()
+            if selected_files:
+                credentials_file = selected_files[0]  # 获取第一个选择的文件
+                project_dir = os.path.dirname(os.path.abspath(__file__))  # 获取当前脚本所在的目录
+                new_file_path = os.path.join(project_dir, os.path.basename(credentials_file))
+                
+                previous_file_path = self.config["Settings"]["google_cloud_key_file_path"]
+                if os.path.exists(previous_file_path):
+                    os.remove(previous_file_path)  # 如果文件已存在，先删除它
+
+                try:
+                    shutil.copy(credentials_file, new_file_path)
+                    # 保存用户设置到 TOML 配置文件
+                    self.config["Settings"]["google_cloud_key_file_path"] = new_file_path
+                    with open("config.toml", "w") as config_file:
+                        toml.dump(self.config, config_file)
+                except Exception as e:
+                    print.setText("Error copying file: " + str(e))
 
     def closeEvent(self, event):
         self.setting_window_closed.emit()
         event.accept()
-
-
-# 主应用程序窗口
-class MaincapturingWindow(QMainWindow):
-    def __init__(self, config):
-        super().__init__()
-
-        self.config = config
-
-        # 设置标题
-        self.setWindowTitle("主控制窗口")
-
-        # ... 其余的代码 ...
-
-        # 创建一个按钮以打开设置窗口
-        self.settings_button = QPushButton("設定", self)
-        self.settings_button.clicked.connect(self.show_settings)
-
-    def show_settings(self):
-        self.settings_window = SettingsWindow(self.config)
-        self.settings_window.show()
-
-# ... 其余的代码 ...
-
-if __name__ == "__main__":
-    # 檢查是否有 config file
-    if not os.path.exists("config.toml"):
-        # 如果文件不存在，创建默认配置
-        default_config = {
-            "Settings": {
-                "text_font_size": 14,
-                "text_color": "white",
-                "frequency": "標準 (2 秒)",
-            }
-        }
-        with open("config.toml", "w") as config_file:
-            toml.dump(default_config, config_file)
-
-    # 載入 config
-    with open("config.toml", "r") as config_file:
-        config = toml.load(config_file)
-
-    App = QApplication([])
-
-    main_capturing_window = MaincapturingWindow(config)
-    main_capturing_window.show()
-
-    sys.exit(App.exec())
