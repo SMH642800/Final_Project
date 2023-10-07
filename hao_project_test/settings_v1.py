@@ -16,17 +16,26 @@ class SettingsWindow(QDialog):
     def __init__(self, config):
         super().__init__()
 
+        # 設定 setting window 字體大小
+        self._font_size = 16
+
         # 讀取 config file
         self.config = config
 
         # 設置參數
         self._text_font_size = self.config['Settings']['text_font_size']
+        self._text_font_color = self.config['Settings']['text_font_color']
+        self._text_font_color_name = self._text_font_color
 
         # 设置窗口标题和属性
         self.setWindowTitle("設定")
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)  # 使设置窗口始终位于顶层
         self.resize(300, 200)  # 視窗大小 400 x 300
         self.center()  # 視窗顯示在螢幕正中間
+
+        # text_color_show 和 color_name 初始化
+        self.text_color_show = QLabel()
+        self.color_name = QLabel()
 
         # Create a top-level layout
         layout = QVBoxLayout()
@@ -38,6 +47,7 @@ class SettingsWindow(QDialog):
         tabs.addTab(self.create_recognition_settings(), "辨識")
         tabs.addTab(self.create_system_settings(), "系統")
         tabs.addTab(self.create_about_page(), "關於")
+        tabs.setStyleSheet("QTabBar::tab { font-size: 14px; }")  # set tabs font size: 14px
  
         layout.addWidget(tabs)
 
@@ -61,24 +71,37 @@ class SettingsWindow(QDialog):
         text_size_combo.setCurrentText(str(self._text_font_size))  # 設置文本字體大小
         text_size_combo.currentTextChanged.connect(self.update_text_size)
 
-        # 创建文本颜色按钮
+        # 创建文本颜色按钮以及預覽顏色
         text_color_label = QLabel("文字顏色:")
         text_color_button = QPushButton("選擇顏色")
         text_color_button.clicked.connect(self.choose_text_color)
 
+        self.text_color_show.setFixedSize(70, 40)  # 設置預覽顏色的範圍大小
+        self.text_color_show.setStyleSheet(
+            'border: 5px solid lightgray;'  # 邊框線條顏色
+            'border-radius: 5px;'  # 邊框圓角
+            f'background-color: {self._text_font_color};'  # 設置背景顏色
+        )
+        self.color_name.setText(self._text_font_color_name)  # 設置顏色名稱
+
+
         # 创建 text_size 水平布局
         text_size_layout = QHBoxLayout()
-
         # 将文本大小标签和下拉框添加到水平布局
         text_size_layout.addWidget(text_size_label)
         text_size_layout.addWidget(text_size_combo)
 
         # 创建 text_color 水平布局
         text_color_layout = QHBoxLayout()
-
         # 将文本大小标签和下拉框添加到水平布局
         text_color_layout.addWidget(text_color_label)
         text_color_layout.addWidget(text_color_button)
+
+        # 创建 color_show 水平布局
+        color_show_layout = QHBoxLayout()
+        # 将文本大小标签和下拉框添加到水平布局
+        color_show_layout.addWidget(self.text_color_show)
+        color_show_layout.addWidget(self.color_name)
 
         # Create a vertical layout
         layout = QVBoxLayout()
@@ -86,6 +109,7 @@ class SettingsWindow(QDialog):
         # Add the horizontal button layout to the vertical layout
         layout.addLayout(text_size_layout)
         layout.addLayout(text_color_layout)
+        layout.addLayout(color_show_layout)
 
         # 设置水平布局作为文本设置的布局
         text_settings.setLayout(layout)
@@ -138,7 +162,7 @@ class SettingsWindow(QDialog):
         about_page = QWidget()
 
         # 建立版本訊息、作者名稱、使用說明連結、Github連結
-        version_label = QLabel("版本: 1.0")
+        version_label = QLabel("版本: ver1.0")
         author_label = QLabel("作者: Hsieh Meng-Hao")
         manual_link_label = QLabel('<a href="file:///path/to/your/manual.html">使用說明</a>')
         github_link_label = QLabel('<a href="https://github.com/your/repo">GitHub</a>')
@@ -169,13 +193,32 @@ class SettingsWindow(QDialog):
         with open("config.toml", "w") as config_file:
             toml.dump(self.config, config_file)
         
-
     def choose_text_color(self):
         # 打开颜色对话框，并根据用户的选择设置文本颜色
         color = QColorDialog.getColor()
+        hex_color = ""  # 初始化 hex_color 為空字符串
         if color.isValid():
-            # 更新文本颜色
-            pass
+            name = color.name()
+            self.color_name.setText(name)
+
+            # 將選定的顏色轉換為十六進位格式
+            hex_color = color.name()
+
+            # 更新 color_name 的字體顏色
+            self.color_name.setStyleSheet(f'color: {hex_color};')
+
+            # 更新 text_color_show 的背景顏色
+            self.text_color_show.setStyleSheet(
+                'border: 5px solid lightgray;'  # 邊框線條顏色
+                'border-radius: 5px;'  # 邊框圓角
+                f'background-color: {hex_color};' # 更新顏色
+            )
+
+            # 保存用户设置到JSON配置文件
+            self._text_font_color = hex_color
+            self.config["Settings"]["text_font_color"] = self._text_font_color
+            with open("config.toml", "w") as config_file:
+                toml.dump(self.config, config_file)
 
     def update_recognition_frequency(self, index):
         # 根据用户选择的频率更新辨识频率

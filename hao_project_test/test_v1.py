@@ -85,15 +85,16 @@ class MaincapturingWindow(QMainWindow):
         self.translation_text_label.setContentsMargins(10, 10, 10, 10)  # 設置距離最左、最右、最上、最下的內邊距為 10px
 
         # 创建一个QPalette对象来设置 OCR_result_text 的背景及文字颜色
-        text_label_palette = QPalette()
-        text_label_palette.setColor(QPalette.Window, QColor(50, 50, 50))  # 设置背景颜色为浅灰色
-        text_label_palette.setColor(QPalette.WindowText, QColor(255, 255, 255))  # 设置文字颜色为白色
-        self.ocr_text_label.setPalette(text_label_palette)
-        self.translation_text_label.setPalette(text_label_palette)
+        self.text_label_palette = QPalette()
+        self.text_label_palette.setColor(QPalette.Window, QColor(50, 50, 50))  # 设置背景颜色为浅灰色
 
         # 讀取 config file 中的 text_font_size
         text_font_size = self.config['Settings']['text_font_size']
         self.update_text_font_size(text_font_size)
+
+        # 讀取 config file 中的 text_font_size
+        text_font_color = self.config['Settings']['text_font_color']
+        self.update_text_font_color(text_font_color)
 
         # Create a vertical layout
         layout = QVBoxLayout()
@@ -154,6 +155,9 @@ class MaincapturingWindow(QMainWindow):
         self.settings_window.setting_window_closed.connect(self.set_main_and_capture_window_frame_window_back)
         self.settings_window.show()
 
+        for button in [self.add_window_button, self.action_button, self.pin_button, self.settings_button]:
+            button.setEnabled(False)
+
         # main_window 切换成無框窗口
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.show()
@@ -167,6 +171,7 @@ class MaincapturingWindow(QMainWindow):
         # 在这里应用新的文本字体大小
         font = QFont()
         font.setPointSize(new_font_size)
+        font.setBold(True) # 設置粗體
         self.ocr_label.setFont(font)
         self.translation_label.setFont(font)
         self.ocr_text_label.setFont(font)
@@ -179,6 +184,12 @@ class MaincapturingWindow(QMainWindow):
         # Set the height of ocr_label and translation_label to match font size
         self.ocr_label.setFixedHeight(label_height)
         self.translation_label.setFixedHeight(label_height)
+
+    def update_text_font_color(self, new_font_color):
+        # 在这里应用新的文本字體顏色
+        self.text_label_palette.setColor(QPalette.WindowText, QColor(new_font_color))  # 设置文字颜色为白色
+        self.ocr_text_label.setPalette(self.text_label_palette)
+        self.translation_text_label.setPalette(self.text_label_palette)
 
     def add_or_check_screen_capture_window(self):
         # Check if a screen capture window is already open
@@ -232,10 +243,14 @@ class MaincapturingWindow(QMainWindow):
             self.screen_capture_window.setWindowFlag(Qt.WindowStaysOnTopHint)
             self.screen_capture_window.show()
 
+        for button in [self.add_window_button, self.action_button, self.pin_button, self.settings_button]:
+            button.setEnabled(True)
+
         # 讀取 config file 中的 text_font_size
         text_font_size = self.config['Settings']['text_font_size']
+        text_font_color = self.config['Settings']['text_font_color']
         self.update_text_font_size(text_font_size)
-
+        self.update_text_font_color(text_font_color)
 
     def handle_screen_capture_window_closed(self):
         # Slot to handle the screen capture window being closed
@@ -465,7 +480,7 @@ if __name__ == "__main__":
         default_config = {
             "Settings": {
                 "text_font_size": 14,
-                "text_color": "white"
+                "text_font_color": "#FFFFFF",
                 # 添加其他配置项
             }
         }

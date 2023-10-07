@@ -1,20 +1,32 @@
-import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton
+from PySide6 import QtCore, QtGui, QtWidgets
 
-def hide_window():
-    # 隱藏主窗口
-    main_window.hide()
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(319, 139)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.label = QtWidgets.QLabel(self.centralwidget)
+        self.label.setGeometry(QtCore.QRect(40, 20, 80, 80))
+        self.label.setFrameShape(QtWidgets.QFrame.WinPanel)
+        self.label.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.label.setLineWidth(1)
+        self.label.setObjectName("label")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.label.setText(_translate("MainWindow", "TextLabel"))
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-
-    main_window = QMainWindow()
-    main_window.setWindowTitle("隱藏窗口示例")
-    main_window.setGeometry(100, 100, 400, 200)
-
-    button = QPushButton("隱藏窗口", main_window)
-    button.clicked.connect(hide_window)
-
-    main_window.show()
-
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
     sys.exit(app.exec_())
