@@ -25,6 +25,8 @@ import time
 client_vision = None
 client_translate = None
 
+count = 0
+
 def set_google_vision():
     global client_vision
     # 初始化Google Cloud Vision API客戶端
@@ -487,7 +489,7 @@ class ScreenCaptureWindow(QMainWindow):
                 print("画面相似度高，不需要进行 OCR 辨识")
             else:
                 # 启动强制更新计时器
-                self.force_update_timer.start(5000) # 強制 5 秒更新一次
+                #self.force_update_timer.start(5000) # 強制 5 秒更新一次
 
                 # Perform OCR using Google Cloud Vision on the screenshot
                 self.perform_ocr(screenshot)
@@ -496,15 +498,27 @@ class ScreenCaptureWindow(QMainWindow):
     def is_similar_to_previous(self, current_image):
         # 将当前图像与上一次捕获的图像进行相似度比较
         if self.previous_image is not None:
+            # 將PIL圖像轉換為OpenCV格式
+            previous_cv = cv2.cvtColor(np.array(self.previous_image), cv2.COLOR_RGB2BGR)
+            current_cv = cv2.cvtColor(np.array(current_image), cv2.COLOR_RGB2BGR)
+
+            # 將圖像轉換為灰度圖像
+            previous_gray = cv2.cvtColor(previous_cv, cv2.COLOR_BGR2GRAY)
+            current_gray = cv2.cvtColor(current_cv, cv2.COLOR_BGR2GRAY)
+
+            # 將灰度圖像進行二值化處理
+            _, previous_binary = cv2.threshold(previous_gray, 128, 255, cv2.THRESH_BINARY)
+            _, current_binary = cv2.threshold(current_gray, 128, 255, cv2.THRESH_BINARY)
+
             # 使用OpenCV的相似度比较方法
-            result = cv2.matchTemplate(np.array(current_image), np.array(self.previous_image), cv2.TM_CCOEFF_NORMED)
+            result = cv2.matchTemplate(current_binary, previous_binary, cv2.TM_CCOEFF_NORMED)
 
             # 获取最大匹配值
             max_similarity = np.max(result)
             print("匹配度：", max_similarity)
 
             # 设定相似度阈值，可以根据具体需求调整
-            similarity_threshold = 0.75  # 这里设定一个普通的阈值
+            similarity_threshold = 0.95  # 这里设定一个普通的阈值
 
             if max_similarity >= similarity_threshold:
                 return True  # 与上一次图像相似
@@ -517,6 +531,9 @@ class ScreenCaptureWindow(QMainWindow):
                                             self.geometry().y() + self.geometry().height())))
 
     def closeEvent(self, event):
+        global count
+        print(count)
+
         # Stop the timer when the screen capture window is closed
         self.timer.stop()
         event.accept()
@@ -524,14 +541,29 @@ class ScreenCaptureWindow(QMainWindow):
 
     def perform_ocr(self, screenshot):
         global client_vision, client_translate
+        global count
+
+        count += 1
 
         # 保存当前图像作为上一次捕获的图像
         self.previous_image = screenshot.copy()
 
-        # Save the screenshot to an in-memory buffer as a PNG image
-        image_buffer = io.BytesIO()
-        screenshot.save(image_buffer, format='PNG')
-        screenshot_bytes = image_buffer.getvalue()
+        # 將PIL圖像轉換為OpenCV格式
+        screenshot_cv = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+
+        # 將圖像轉換為灰度圖像
+        gray = cv2.cvtColor(screenshot_cv, cv2.COLOR_BGR2GRAY)
+
+        # 將灰度圖像進行二值化處理
+        _, binary_image = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY)
+
+        # 將OpenCV格式的二值化圖像轉換為PIL格式
+        binary_image_pil = Image.fromarray(binary_image)
+
+        # 保存二值化圖像到緩衝區
+        binary_image_buffer = io.BytesIO()
+        binary_image_pil.save(binary_image_buffer, format='PNG')
+        screenshot_bytes = binary_image_buffer.getvalue()
 
         # 結束測量capture時間
         capture_end = time.time()
@@ -541,7 +573,7 @@ class ScreenCaptureWindow(QMainWindow):
 
         # 使用Google Cloud Vision API進行文字辨識
         image = vision_v1.Image(content=screenshot_bytes)
-        response = client_vision.text_detection(image=image)
+        response = client_vision.document_text_detection(image=image)
         texts = response.text_annotations
 
         # 提取辨識到的文字
@@ -628,6 +660,8 @@ if __name__ == "__main__":
 
     # Show the windows
     main_capturing_window.show()
+
+    count = 0
     
     # start the app
     sys.exit(App.exec())
