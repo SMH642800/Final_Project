@@ -623,7 +623,6 @@ class ScreenCaptureWindow(QMainWindow):
 
                 # Unescape HTML entities
                 text = translated_line["translatedText"]
-
                 translated_lines.append(html.unescape(text))
 
             # 將翻譯後的行重新組合成一個帶有換行的字符串
