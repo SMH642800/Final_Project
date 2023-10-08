@@ -94,6 +94,8 @@ class MaincapturingWindow(QMainWindow):
         # 创建一个QFont对象来设置文字大小
         text_font_size = self.config['Settings']['text_font_size']
         self.update_text_font_size(text_font_size)
+        font = QFont()
+        font.setPointSize(text_font_size)  # 设置文字大小为14
 
         # Create a vertical layout
         layout = QVBoxLayout()
@@ -457,7 +459,7 @@ if __name__ == "__main__":
         config = toml.load(config_file)
 
     # 設定Google Cloud金鑰環境變數，請將YOUR_GOOGLE_CLOUD_KEY替換成你的實際金鑰
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/menghao/Downloads/大學專題資料/googleAPI/manifest-surfer-400014-6ed9f85a5367.json'
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/menghao/Downloads/大學專題資料/googleAPI/manifest-surfer-400014-8bcc91f54c0b.json'
     #os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "YOUR_GOOGLE_CLOUD_KEY.json"
 
     # 初始化Google Cloud Vision API客戶端

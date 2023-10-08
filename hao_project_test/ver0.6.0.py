@@ -16,6 +16,7 @@ from PySide6.QtCore import Signal
 import pyscreenshot as ImageGrab
 from google.cloud import vision_v1
 from google.cloud import translate_v2 as translate
+from google.oauth2 import service_account
 
 from settings_v3 import SettingsWindow
 
@@ -162,8 +163,23 @@ class MaincapturingWindow(QMainWindow):
 
         # 設定Google Cloud金鑰環境變數
         if config["Settings"]["google_cloud_key_file_path"] != "":
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config["Settings"]["google_cloud_key_file_path"]
-        
+            google_key_file_path = config["Settings"]["google_cloud_key_file_path"]
+            if os.path.exists(google_key_file_path):
+                try:
+                    credentials = service_account.Credentials.from_service_account_file(google_key_file_path)
+                    # Create a client for Google Translation
+                    client_translate = translate.Client(credentials=credentials)
+                    translation = client_translate.translate('Hello', target_language='es')
+
+                    # 設置 GCP credentials 和初始化 google.vision 和 google.translation 
+                    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config["Settings"]["google_cloud_key_file_path"]
+                    set_google_vision()
+                    set_google_translation()
+
+                    print("憑證有效。")
+                except Exception as e:
+                    print(f"憑證無效：{e}")
+                        
         # Check if Google Cloud credentials are set
         google_credentials_set = "GOOGLE_APPLICATION_CREDENTIALS" in os.environ
         print(google_credentials_set)
@@ -186,9 +202,6 @@ class MaincapturingWindow(QMainWindow):
                 # set only setting button enabled
                 for button in [self.add_window_button, self.action_button, self.pin_button]:
                     button.setEnabled(False)
-            else:
-                set_google_vision()
-                set_google_translation()
                 
     def delayed_show_message_box(self):
         # 启动定时器，延迟一定时间后显示消息框
@@ -282,7 +295,9 @@ class MaincapturingWindow(QMainWindow):
 
     def update_google_credential(self, new_google_credential):
         # Update google credential
-        self._google_credentials = new_google_credential
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = new_google_credential
+        set_google_vision()
+        set_google_translation()
 
     def add_or_check_screen_capture_window(self):
         # Check if a screen capture window is already open
@@ -550,12 +565,15 @@ class ScreenCaptureWindow(QMainWindow):
 
         # 將PIL圖像轉換為OpenCV格式
         screenshot_cv = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+        cv2.imwrite("original.png", screenshot_cv)
 
         # 將圖像轉換為灰度圖像
         gray = cv2.cvtColor(screenshot_cv, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite("gray.png", gray)
 
         # 將灰度圖像進行二值化處理
         _, binary_image = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY)
+        cv2.imwrite("binary.png", binary_image)
 
         # 將OpenCV格式的二值化圖像轉換為PIL格式
         binary_image_pil = Image.fromarray(binary_image)
@@ -573,7 +591,7 @@ class ScreenCaptureWindow(QMainWindow):
 
         # 使用Google Cloud Vision API進行文字辨識
         image = vision_v1.Image(content=screenshot_bytes)
-        response = client_vision.document_text_detection(image=image)
+        response = client_vision.text_detection(image=image)
         texts = response.text_annotations
 
         # 提取辨識到的文字
