@@ -411,7 +411,7 @@ class ScreenCaptureWindow(QMainWindow):
         # plot the border of the window
         self.border_frame = QFrame(self)
         self.border_frame.setFrameShape(QFrame.Box)
-        self.border_frame.setStyleSheet('QFrame { border: 3px solid red; }')
+        self.border_frame.setStyleSheet('QFrame { border: 3px solid red; border-radius: 10px;}')
 
         # 将边界线条添加到布局管理器
         layout.addWidget(self.border_frame)
@@ -520,7 +520,6 @@ class ScreenCaptureWindow(QMainWindow):
             # 將圖像轉換為灰度圖像
             previous_gray = cv2.cvtColor(previous_cv, cv2.COLOR_BGR2GRAY)
             current_gray = cv2.cvtColor(current_cv, cv2.COLOR_BGR2GRAY)
-            
             """
             # 將灰度圖像進行二值化處理
             _, previous_binary = cv2.threshold(previous_gray, 128, 255, cv2.THRESH_BINARY)
@@ -534,12 +533,23 @@ class ScreenCaptureWindow(QMainWindow):
             max_similarity = np.max(result)
             print("匹配度：", max_similarity)
 
-            # 设定相似度阈值，可以根据具体需求调整
-            similarity_threshold = 0.95  # 这里设定一个普通的阈值
+            if max_similarity == 1.0:
+                check_result = cv2.matchTemplate(previous_cv, current_cv, cv2.TM_CCOEFF_NORMED)
+                check_max_similarity = np.max(check_result)
+                print("對調後匹配度：", check_max_similarity)
 
-            if max_similarity >= similarity_threshold:
-                return True  # 与上一次图像相似
-            return False  # 与上一次图像不相似
+                if check_max_similarity == 0.0:
+                    return False # 与上一次图像不相似
+                else:
+                    return True # 与上一次图像相似
+            else:
+                # 设定相似度阈值，可以根据具体需求调整
+                similarity_threshold = 0.95  # 这里设定一个普通的阈值
+
+                if max_similarity >= similarity_threshold:
+                    return True  # 与上一次图像相似
+                else:
+                    return False  # 与上一次图像不相似
     
     def force_update(self):
         print("强制更新")
@@ -565,15 +575,16 @@ class ScreenCaptureWindow(QMainWindow):
         # 保存当前图像作为上一次捕获的图像
         self.previous_image = screenshot.copy()
 
-        """
         # 將PIL圖像轉換為OpenCV格式
         screenshot_cv = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
-        cv2.imwrite("original.png", screenshot_cv)
 
         # 將圖像轉換為灰度圖像
-        gray = cv2.cvtColor(screenshot_cv, cv2.COLOR_BGR2GRAY)
-        cv2.imwrite("gray.png", gray)
+        gray_image = cv2.cvtColor(screenshot_cv, cv2.COLOR_BGR2GRAY)
 
+        # 將OpenCV格式的二值化圖像轉換為PIL格式
+        binary_image_pil = Image.fromarray(gray_image)
+
+        """
         # 將灰度圖像進行二值化處理
         _, binary_image = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY)
         cv2.imwrite("binary.png", binary_image)
@@ -587,10 +598,16 @@ class ScreenCaptureWindow(QMainWindow):
         screenshot_bytes = binary_image_buffer.getvalue()
         """
 
+        binary_image_buffer = io.BytesIO()
+        binary_image_pil.save(binary_image_buffer, format='PNG')
+        screenshot_bytes = binary_image_buffer.getvalue()
+
+        """
         # Save the screenshot to an in-memory buffer as a PNG image
         image_buffer = io.BytesIO()
         screenshot.save(image_buffer, format='PNG')
         screenshot_bytes = image_buffer.getvalue()
+        """
 
         # 結束測量capture時間
         capture_end = time.time()
