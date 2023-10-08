@@ -520,13 +520,15 @@ class ScreenCaptureWindow(QMainWindow):
             # 將圖像轉換為灰度圖像
             previous_gray = cv2.cvtColor(previous_cv, cv2.COLOR_BGR2GRAY)
             current_gray = cv2.cvtColor(current_cv, cv2.COLOR_BGR2GRAY)
-
+            
+            """
             # 將灰度圖像進行二值化處理
             _, previous_binary = cv2.threshold(previous_gray, 128, 255, cv2.THRESH_BINARY)
             _, current_binary = cv2.threshold(current_gray, 128, 255, cv2.THRESH_BINARY)
+            """
 
             # 使用OpenCV的相似度比较方法
-            result = cv2.matchTemplate(current_binary, previous_binary, cv2.TM_CCOEFF_NORMED)
+            result = cv2.matchTemplate(current_gray, previous_gray, cv2.TM_CCOEFF_NORMED)
 
             # 获取最大匹配值
             max_similarity = np.max(result)
@@ -563,6 +565,7 @@ class ScreenCaptureWindow(QMainWindow):
         # 保存当前图像作为上一次捕获的图像
         self.previous_image = screenshot.copy()
 
+        """
         # 將PIL圖像轉換為OpenCV格式
         screenshot_cv = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
         cv2.imwrite("original.png", screenshot_cv)
@@ -582,6 +585,12 @@ class ScreenCaptureWindow(QMainWindow):
         binary_image_buffer = io.BytesIO()
         binary_image_pil.save(binary_image_buffer, format='PNG')
         screenshot_bytes = binary_image_buffer.getvalue()
+        """
+
+        # Save the screenshot to an in-memory buffer as a PNG image
+        image_buffer = io.BytesIO()
+        screenshot.save(image_buffer, format='PNG')
+        screenshot_bytes = image_buffer.getvalue()
 
         # 結束測量capture時間
         capture_end = time.time()
