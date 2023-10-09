@@ -9,27 +9,29 @@ from PySide6.QtCore import *
 from PySide6.QtGui import * 
 from PySide6.QtWidgets import * 
 
+from config_handler import ConfigHandler
+
 
 # 创建一个新的类以用于设置窗口
 class SettingsWindow(QDialog):
     # Create a custom signal for closed event
     setting_window_closed = Signal()
 
-    def __init__(self, config):
+    def __init__(self, config_handler: ConfigHandler):
         super().__init__()
 
         # 設定 setting window 字體大小
         self._font_size = 16
 
         # 讀取 config file
-        self.config = config
+        self.config_handle = config_handler
 
         # 設置參數
-        self._text_font_size = self.config['Settings']['text_font_size']
-        self._text_font_color = self.config['Settings']['text_font_color']
+        self._text_font_size = self.config_handle.get_font_size()
+        self._text_font_color = self.config_handle.get_font_color()
         self._text_font_color_name = self._text_font_color
-        self._frequency = self.config['Settings']['frequency']
-        self._google_credentials = self.config['Settings']['google_cloud_key_file_path']
+        self._frequency = self.config_handle.get_capture_frequency()
+        self._google_credentials = self.config_handle.get_google_credential_path()
 
         # 设置窗口标题和属性
         self.setWindowTitle("設定")
@@ -139,9 +141,7 @@ class SettingsWindow(QDialog):
 
             case "慢 (3 秒)":
                 frequency_combo.setCurrentIndex(2)  
-        
-            case _:
-                frequency_combo.setCurrentIndex(0)  
+
         frequency_combo.currentIndexChanged.connect(self.update_recognition_frequency)
 
         # 将小部件添加到辨識设置布局
@@ -204,9 +204,7 @@ class SettingsWindow(QDialog):
         self._text_font_size = int(selected_font_size)
         
         # 保存用户设置到JSON配置文件
-        self.config["Settings"]["text_font_size"] = self._text_font_size
-        with open("config.toml", "w") as config_file:
-            toml.dump(self.config, config_file)
+        self.config_handle.set_font_size(self._text_font_size)
         
     def choose_text_color(self):
         # 打开颜色对话框，并根据用户的选择设置文本颜色
@@ -231,9 +229,7 @@ class SettingsWindow(QDialog):
 
             # 保存用户设置到 TOML 配置文件
             self._text_font_color = hex_color
-            self.config["Settings"]["text_font_color"] = self._text_font_color
-            with open("config.toml", "w") as config_file:
-                toml.dump(self.config, config_file)
+            self.config_handle.set_font_color(self._text_font_color)
 
     def update_recognition_frequency(self, selected_frequency):
         # 更新偵測的頻率
@@ -251,9 +247,7 @@ class SettingsWindow(QDialog):
                 self._frequency = "標準 (2 秒)"
         
         # 保存用户设置到 TOML 配置文件
-        self.config["Settings"]["frequency"] = self._frequency
-        with open("config.toml", "w") as config_file:
-            toml.dump(self.config, config_file)
+        self.config_handle.set_capture_frequency(self._frequency)
 
     def set_google_credentials(self):
         # 打开一个文件对话框，让用户选择 Google 凭证文件
@@ -273,18 +267,16 @@ class SettingsWindow(QDialog):
                 project_dir = os.path.dirname(os.path.abspath(__file__))  # 获取当前脚本所在的目录
                 new_file_path = os.path.join(project_dir, os.path.basename(credentials_file))
                 
-                previous_file_path = self.config["Settings"]["google_cloud_key_file_path"]
+                previous_file_path = self.config_handle.get_google_credential_path()
                 if os.path.exists(previous_file_path):
                     os.remove(previous_file_path)  # 如果文件已存在，先删除它
 
                 try:
                     shutil.copy(credentials_file, new_file_path)
                     # 保存用户设置到 TOML 配置文件
-                    self.config["Settings"]["google_cloud_key_file_path"] = new_file_path
-                    with open("config.toml", "w") as config_file:
-                        toml.dump(self.config, config_file)
+                    self.config_handle.set_google_credential_path(new_file_path)
                 except Exception as e:
-                    print.setText("Error copying file: " + str(e))
+                    pass
 
     def closeEvent(self, event):
         self.setting_window_closed.emit()
