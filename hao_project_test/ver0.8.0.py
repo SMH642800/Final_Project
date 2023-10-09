@@ -125,6 +125,7 @@ class MainMenuWindow(QMainWindow):
         self.ocr_text_label.setAutoFillBackground(True)  # 允许设置背景颜色
         self.ocr_text_label.setContentsMargins(10, 10, 10, 10)  # 設置距離最左、最右、最上、最下的內邊距為 10px
         self.ocr_text_label.setWordWrap(True)  # 启用自动换行
+
         # 创建用于显示翻译后文本的QLabel
         self.translation_label = QLabel("Translation:", self)
         self.translation_label.setStyleSheet("color: white;")  # 設置文字顏色為白色
@@ -133,6 +134,7 @@ class MainMenuWindow(QMainWindow):
         self.translation_text_label.setAutoFillBackground(True)  # 允许设置背景颜色
         self.translation_text_label.setContentsMargins(10, 10, 10, 10)  # 設置距離最左、最右、最上、最下的內邊距為 10px
         self.translation_text_label.setWordWrap(True)  # 启用自动换行
+        
         # 設置 ocr_lable 和 ocr_translation_label 的字體大小與粗細度
         font = QFont()
         font.setPointSize(16)
