@@ -719,7 +719,7 @@ class ScreenCaptureWindow(QMainWindow):
             # 將翻譯後的行重新組合成一個帶有換行的字符串
             translated_text_with_newlines = unescape_translated_text.replace("。", "。\n").replace('？', '？\n')  # 以句點和問號為換行分界點
             main_capturing_window.translation_text_label.setText(translated_text_with_newlines)
-            #main_capturing_window.translation_text_label.setText(unescape_translated_text)
+            #main_capturing_window.translation_text_label.setText(unescape_translated_text)  # 完全不以句點和問號為換行分界點
 
             # translation 測量結束
             trans_end = time.time()
