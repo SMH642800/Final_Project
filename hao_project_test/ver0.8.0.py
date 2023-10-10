@@ -705,10 +705,21 @@ class ScreenCaptureWindow(QMainWindow):
 
             # translation 測量開始
             trans_start = time.time()
-
+ 
             # 將辨識的文字按行分割
-            lines = detected_text.split("\n")
+            lines = detected_text.replace("\n", "")
 
+            target_language = "zh-TW"  # 將此替換為你想要的目標語言代碼（例如：英文 --> en, 繁體中文 --> zh-TW）
+            translated_lines = client_translate.translate(lines, target_language=target_language)
+
+            # Unescape HTML entities
+            unescape_translated_text = html.unescape(translated_lines["translatedText"])
+
+            # 將翻譯後的行重新組合成一個帶有換行的字符串
+            translated_text_with_newlines = unescape_translated_text.replace("。", "。\n")  # 以句點為換行分界點
+            main_capturing_window.translation_text_label.setText(translated_text_with_newlines)
+
+            """
             # 初始化翻譯後的行列表
             translated_lines = []
 
@@ -729,6 +740,7 @@ class ScreenCaptureWindow(QMainWindow):
 
             # 设置翻译文本
             main_capturing_window.translation_text_label.setText(translated_text_with_newlines)
+            """
 
             # translation 測量結束
             trans_end = time.time()
