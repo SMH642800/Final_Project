@@ -13,8 +13,6 @@ pyside6 = "^6.5.2"
 opencv-python = "^4.8.1.78"
 pyautogui = "^0.9.52"
 toml = "^0.10.2"
-requests = "^2.31.0"
-googletrans = "4.0.0-rc1"
 
 
 [build-system]
