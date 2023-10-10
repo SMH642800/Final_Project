@@ -134,7 +134,7 @@ class MainMenuWindow(QMainWindow):
         self.translation_text_label.setAutoFillBackground(True)  # 允许设置背景颜色
         self.translation_text_label.setContentsMargins(10, 10, 10, 10)  # 設置距離最左、最右、最上、最下的內邊距為 10px
         self.translation_text_label.setWordWrap(True)  # 启用自动换行
-        
+
         # 設置 ocr_lable 和 ocr_translation_label 的字體大小與粗細度
         font = QFont()
         font.setPointSize(16)
@@ -373,6 +373,7 @@ class MainMenuWindow(QMainWindow):
             self.action_button.clicked.disconnect()
             self.action_button.clicked.connect(self.stop_capture)
             self.screen_capture_window.start_capture()
+            self.add_window_button.setEnabled(False)
             self.settings_button.setEnabled(False)
 
             # 移除screen_capture_window的最上层标志
@@ -403,6 +404,7 @@ class MainMenuWindow(QMainWindow):
             self.action_button.clicked.disconnect()
             self.action_button.clicked.connect(self.toggle_capture)
             self.screen_capture_window.stop_capture()
+            self.add_window_button.setEnabled(True)
             self.settings_button.setEnabled(True)
 
             # 恢复screen_capture_window的最上层标志

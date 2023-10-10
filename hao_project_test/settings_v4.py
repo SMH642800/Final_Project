@@ -36,7 +36,7 @@ class SettingsWindow(QDialog):
         # 设置窗口标题和属性
         self.setWindowTitle("設定")
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)  # 使设置窗口始终位于顶层
-        self.resize(300, 200)  # 視窗大小 400 x 300
+        self.setFixedSize(300, 200)  # 視窗大小 400 x 300
         self.center()  # 視窗顯示在螢幕正中間
 
         # text_color_show 和 color_name 初始化
@@ -82,9 +82,9 @@ class SettingsWindow(QDialog):
         text_color_button = QPushButton("選擇顏色")
         text_color_button.clicked.connect(self.choose_text_color)
 
-        self.text_color_show.setFixedSize(70, 40)  # 設置預覽顏色的範圍大小
+        self.text_color_show.setFixedSize(60, 30)  # 設置預覽顏色的範圍大小
         self.text_color_show.setStyleSheet(
-            'border: 5px solid lightgray;'  # 邊框線條顏色
+            'border: 3px solid lightgray;'  # 邊框線條顏色
             'border-radius: 5px;'  # 邊框圓角
             f'background-color: {self._text_font_color};'  # 設置背景顏色
         )

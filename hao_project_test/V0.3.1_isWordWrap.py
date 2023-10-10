@@ -236,7 +236,7 @@ class ScreenCaptureWindow(QMainWindow):
         self.timer.start(2000)  # Capture every 2000 milliseconds (2 second)
 
         # 更改窗口透明度和边界线条
-        self.setWindowOpacity(0.1)
+        self.setWindowOpacity(0.0)
         self.border_frame.hide()
 
     def stop_capture(self):
