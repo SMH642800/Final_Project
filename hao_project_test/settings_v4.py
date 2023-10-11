@@ -36,12 +36,8 @@ class SettingsWindow(QDialog):
         # 设置窗口标题和属性
         self.setWindowTitle("設定")
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)  # 使设置窗口始终位于顶层
-        self.setFixedSize(300, 200)  # 視窗大小 400 x 300
+        self.setFixedSize(300, 200)  # 視窗大小 300 x 200
         self.center()  # 視窗顯示在螢幕正中間
-
-        # text_color_show 和 color_name 初始化
-        self.text_color_show = QLabel()
-        self.color_name = QLabel()
 
         # Create a top-level layout
         layout = QVBoxLayout()
@@ -70,43 +66,84 @@ class SettingsWindow(QDialog):
         text_settings = QWidget()
 
         # 创建文本大小下拉框
-        text_size_label = QLabel("文字大小:")
+        text_size_label = QLabel("字體大小：")
         text_size_combo = QComboBox()
+        text_size_combo.setFixedWidth(81)
         for text_size in range(10, 25, 2):
             text_size_combo.addItem(str(text_size))
         text_size_combo.setCurrentText(str(self._text_font_size))  # 設置文本字體大小
         text_size_combo.currentTextChanged.connect(self.update_text_size)
 
         # 创建文本颜色按钮以及預覽顏色
-        text_color_label = QLabel("文字顏色:")
+        text_color_label = QLabel("字體顏色：")
         text_color_button = QPushButton("選擇顏色")
+        text_color_button.setFixedWidth(70)
+        # 使用样式表自定义按钮的外观
+        text_color_button.setStyleSheet(
+            "QPushButton {"
+            "    background-color: #FFFFFF;"
+            "    color: black;"
+            #"    border: 2px solid #2980b9;"
+            "    border-radius: 5px;"
+            "    padding: 3px;"
+            "    font-size: 12px;"
+            "    font-weight: bold;"
+            "}"
+            "QPushButton:hover {"
+            "    background-color: #2980b9;"
+            "    color: white;"
+            "}"
+        )
+
         text_color_button.clicked.connect(self.choose_text_color)
 
+        self.text_color_show = QLabel()
         self.text_color_show.setFixedSize(60, 30)  # 設置預覽顏色的範圍大小
         self.text_color_show.setStyleSheet(
             'border: 3px solid lightgray;'  # 邊框線條顏色
             'border-radius: 5px;'  # 邊框圓角
             f'background-color: {self._text_font_color};'  # 設置背景顏色
         )
+        self.color_name = QLabel()
         self.color_name.setText(self._text_font_color_name)  # 設置顏色名稱
-
+        self.color_name.setStyleSheet(f'color: {self._text_font_color_name};')
+        color_name_font = QFont()
+        color_name_font.setPointSize(16)
+        color_name_font.setBold(True) # 設置粗體
+        self.color_name.setFont(color_name_font)
 
         # 创建 text_size 水平布局
         text_size_layout = QHBoxLayout()
+        # 添加一个占位符来距离左边至少 10px
+        text_size_layout.addSpacing(10)
         # 将文本大小标签和下拉框添加到水平布局
         text_size_layout.addWidget(text_size_label)
+        # 添加一个60px的空白空間
+        text_size_layout.addSpacing(47)
         text_size_layout.addWidget(text_size_combo)
+        # 添加一个60px的空白空間
+        text_size_layout.addSpacing(10)
 
         # 创建 text_color 水平布局
         text_color_layout = QHBoxLayout()
+        # 添加一个占位符来距离左边至少 10px
+        text_color_layout.addSpacing(10)
         # 将文本大小标签和下拉框添加到水平布局
         text_color_layout.addWidget(text_color_label)
+        # 添加一个60px的空白空間
+        text_color_layout.addSpacing(40)
         text_color_layout.addWidget(text_color_button)
+         # 添加一个60px的空白空間
+        text_color_layout.addSpacing(10)
 
         # 创建 color_show 水平布局
         color_show_layout = QHBoxLayout()
+        # 添加一个占位符来距离左边至少 10px
+        color_show_layout.addSpacing(10)
         # 将文本大小标签和下拉框添加到水平布局
         color_show_layout.addWidget(self.text_color_show)
+        # 添加一个60px的空白空間
+        color_show_layout.addSpacing(55)
         color_show_layout.addWidget(self.color_name)
 
         # Create a vertical layout
@@ -215,7 +252,7 @@ class SettingsWindow(QDialog):
         color = QColorDialog.getColor()
         hex_color = ""  # 初始化 hex_color 為空字符串
         if color.isValid():
-            name = color.name()
+            name = color.name().upper()
             self.color_name.setText(name)
 
             # 將選定的顏色轉換為十六進位格式
@@ -232,7 +269,7 @@ class SettingsWindow(QDialog):
             )
 
             # 保存用户设置到 TOML 配置文件
-            self._text_font_color = hex_color
+            self._text_font_color = hex_color.upper()
             self.config_handle.set_font_color(self._text_font_color)
 
     def update_recognition_frequency(self, selected_frequency):

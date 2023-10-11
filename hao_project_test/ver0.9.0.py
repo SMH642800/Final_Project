@@ -63,7 +63,7 @@ class MainMenuWindow(QMainWindow):
 
         # Set the window background color to black
         main_window_palette = QPalette()
-        main_window_palette.setColor(QPalette.Window, QColor(0, 0, 0))
+        main_window_palette.setColor(QPalette.Window, QColor(10, 10, 10))
         self.setPalette(main_window_palette)
 
         # Set the window opacity
@@ -463,8 +463,13 @@ class ScreenCaptureWindow(QMainWindow):
         # set the title
         self.setWindowTitle("Screen Capture region")
 
+        # Set the window background color to black
+        capture_window_palette = QPalette()
+        capture_window_palette.setColor(QPalette.Window, QColor(40, 40, 40))
+        self.setPalette(capture_window_palette)
+
         # 設置視窗的特明度
-        self.setWindowOpacity(0.7)
+        self.setWindowOpacity(0.6)
 
         # 创建一个水平布局管理器
         layout = QHBoxLayout()

@@ -1,5 +1,5 @@
 [Settings]
-text_font_size = 14
-text_font_color = "#ffffff"
+text_font_size = 18
+text_font_color = "#FF2600"
 capture_frequency = "標準 (2 秒)"
 google_cloud_key_file_path = "/Users/menghao/Downloads/大學專題資料/googleAPI/manifest-surfer-400014-8bcc91f54c0b.json"
