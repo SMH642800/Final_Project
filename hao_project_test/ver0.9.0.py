@@ -17,7 +17,7 @@ from google.cloud import vision_v1
 from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
 
-from settings_v4 import SettingsWindow
+from settings_v5 import SettingsWindow
 from config_handler import ConfigHandler
 
 import time

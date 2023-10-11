@@ -247,7 +247,7 @@ class SettingsWindow(QDialog):
 
         # 創建如何取得google憑證連結
         current_directory = os.path.dirname(os.path.abspath(__file__))
-        new_file_path = os.path.join(current_directory, "test.html")
+        new_file_path = os.path.join(current_directory, "sub-google-api.html")
         self.credentials_link = QLabel(f'<a href="file://{new_file_path}">如何取得 Google 憑證？</a>')
         self.credentials_link.setFont(font)
         self.credentials_link.setStyleSheet("QLabel { qproperty-alignment: AlignCenter; } ")
