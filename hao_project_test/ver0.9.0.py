@@ -216,8 +216,6 @@ class MainMenuWindow(QMainWindow):
         # Initialize the attribute
         self.screen_capture_window = None 
 
-        print(self.config_handle.get_google_credential_path())
-
         # 設定Google Cloud金鑰環境變數
         if self.config_handle.get_google_credential_path() != "":
             google_key_file_path = self.config_handle.get_google_credential_path()

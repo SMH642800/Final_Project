@@ -235,7 +235,7 @@ class SettingsWindow(QDialog):
             "QPushButton {"
             "    background-color: rgba(0, 0, 0, 0);"
             "    color: rgb(58, 134, 255);"
-            "    border: 2px solid rgb(58, 134, 255);"
+            "    border: 3px solid rgb(58, 134, 255);"
             "    border-radius: 8px;"
             "    padding: 3px;"
             "}"
@@ -249,8 +249,10 @@ class SettingsWindow(QDialog):
         current_directory = os.path.dirname(os.path.abspath(__file__))
         new_file_path = os.path.join(current_directory, "sub-google-api.html")
         self.credentials_link = QLabel(f'<a href="file://{new_file_path}">如何取得 Google 憑證？</a>')
-        self.credentials_link.setFont(font)
-        self.credentials_link.setStyleSheet("QLabel { qproperty-alignment: AlignCenter; } ")
+        self.credentials_link.setFont(font)    
+        self.credentials_link.setStyleSheet(
+            "QLabel { qproperty-alignment: AlignCenter; } "  # 文字置中
+        )
         self.credentials_link.setOpenExternalLinks(True)  # 允許外部連結
         self.credentials_link.linkActivated.connect(self.open_google_credential_settings_link)
 
@@ -376,8 +378,11 @@ class SettingsWindow(QDialog):
         file_dialog.setNameFilter("JSON Files (*.json)")
         file_dialog.setViewMode(QFileDialog.ViewMode.List)
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
-        file_dialog.setWindowTitle("选择 Google 凭证文件")
-        #file_dialog.exec()
+        file_dialog.setWindowTitle("Choose Google's Credential File")
+        
+        # 设置初始目录（在这里设置为用户主目录，您可以更改为其他目录）
+        initial_directory = QDir.homePath()  # 用户主目录
+        file_dialog.setDirectory(initial_directory)
 
         # 获取所选文件路径并根据文件路径设置 Google 凭证
         if file_dialog.exec():
