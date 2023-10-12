@@ -385,9 +385,9 @@ class MainMenuWindow(QMainWindow):
 
     def update_system_state(self):
         if self.system_state_flag:
-            self.system_state.setText("系統狀態： <font color='red'> ● 擷取中</font> ")
+            self.system_state.setText("系統狀態： <font color='red'>&nbsp;&nbsp;●&nbsp;擷取中</font> ")
         else:
-            self.system_state.setText("系統狀態： <font color='red'> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;擷取中</font> ")
+            self.system_state.setText("系統狀態： <font color='red'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;擷取中</font> ")
         self.system_state_flag = not self.system_state_flag  # 讓下一次顯示另一種狀態
 
     def stop_capture(self):

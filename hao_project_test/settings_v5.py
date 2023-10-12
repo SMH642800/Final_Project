@@ -91,6 +91,7 @@ class SettingsWindow(QDialog):
         # 创建文本颜色按钮以及預覽顏色
         text_color_label = QLabel("字體顏色 ")
         text_color_label.setFont(text_font)
+
         text_color_button = QPushButton("選擇顏色")
         #text_color_button.setFixedWidth(70)
         # 使用样式表自定义按钮的外观
@@ -103,7 +104,13 @@ class SettingsWindow(QDialog):
             "    padding: 3px;"
             "}"
             "QPushButton:hover {"
-            "    background-color: rgb(28, 134, 238);"
+            "    background-color: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #488EF7, stop: 1 #3478F6);"
+            "    border: none;"
+            "    color: white;"
+            "}"
+            "QPushButton:pressed {"
+            "    background-color: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3879E3, stop: 1 #2D66EA);"
+            "    border: none;"
             "    color: white;"
             "}"
         )
@@ -240,7 +247,13 @@ class SettingsWindow(QDialog):
             "    padding: 3px;"
             "}"
             "QPushButton:hover {"
-            "    background-color: rgb(28, 134, 238);"
+            "    background-color: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #488EF7, stop: 1 #3478F6);"
+            "    border: none; "
+            "    color: white;"
+            "}"
+            "QPushButton:pressed {"
+            "    background-color: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3879E3, stop: 1 #2D66EA);"
+            "    border: none;"
             "    color: white;"
             "}"
         )
