@@ -8,17 +8,16 @@ import html
 import datetime
 import numpy as np 
 from PIL import Image
-from PySide6.QtCore import * 
 from PySide6.QtGui import * 
-from PySide6.QtWidgets import * 
-from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import Signal, QTimer
 import pyscreenshot as ImageGrab
 from google.cloud import vision_v1
 from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
 
-from settings_v5 import SettingsWindow
-from config_handler import ConfigHandler
+from settings_v5 import *
+from config_handler import *
 
 import time
 
@@ -748,8 +747,8 @@ if __name__ == "__main__":
     config_handler = ConfigHandler()
     config_handler.read_config_file()
 
-    # create pyqt5 app
-    App = QApplication(sys.argv)
+    # create pyside6 app
+    App = QApplication([])
     
     # Create the screen capture window and the main capturing control window
     main_capturing_window = MainMenuWindow(config_handler)

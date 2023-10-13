@@ -3,7 +3,7 @@
 import os
 import sys
 import shutil
-from PySide6.QtCore import * 
+from PySide6.QtCore import QStandardPaths, QUrl, Signal
 from PySide6.QtGui import * 
 from PySide6.QtWidgets import * 
 from PySide6.QtGui import QDesktopServices
@@ -393,8 +393,8 @@ class SettingsWindow(QDialog):
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
         file_dialog.setWindowTitle("Choose Google's Credential File")
         
-        # 设置初始目录（在这里设置为用户主目录，您可以更改为其他目录）
-        initial_directory = QDir.homePath()  # 用户主目录
+        # 设置初始目录（在这里设置为用户主目录）
+        initial_directory = QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
         file_dialog.setDirectory(initial_directory)
 
         # 获取所选文件路径并根据文件路径设置 Google 凭证
