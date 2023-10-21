@@ -1,10 +1,8 @@
 import io
 import os
 import sys
-import cv2
 import html
 import datetime
-import numpy as np  # 添加NumPy库
 from PIL import Image
 from PySide6.QtCore import * 
 from PySide6.QtGui import * 
@@ -115,6 +113,7 @@ class MaincapturingWindow(QMainWindow):
         self.setCentralWidget(widget)
 
         # 设置窗口标志，使其始终显示在最上面
+        #self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         # Initialize the attribute
@@ -175,11 +174,8 @@ class MaincapturingWindow(QMainWindow):
 
 
 class ScreenCaptureWindow(QMainWindow):
-    # Define a custom signal
+    # Define a custom signal at the class level
     closed = Signal()
-
-    # 定義一個變數用來比較前一張已辨識的圖片
-    previous_image = None
   
     def __init__(self):
         super().__init__()
@@ -222,6 +218,7 @@ class ScreenCaptureWindow(QMainWindow):
         self.timer.timeout.connect(self.capture_screen)
 
         # 设置窗口标志，使其始终显示在最上面
+        #self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         # show all the widgets
@@ -241,7 +238,7 @@ class ScreenCaptureWindow(QMainWindow):
         self.border_frame.setGeometry(0, 0, new_width, new_height)
 
     def start_capture(self):
-        self.timer.start(1000)  # Capture every 2000 milliseconds (2 second)
+        self.timer.start(2000)  # Capture every 2000 milliseconds (2 second)
 
         # 更改窗口透明度和边界线条
         self.setWindowOpacity(0)
@@ -253,22 +250,12 @@ class ScreenCaptureWindow(QMainWindow):
 
     def stop_capture(self):
         self.timer.stop()
-    
-        # 创建消息框
-        msgBox = QMessageBox(self)
-        msgBox.setWindowTitle("Info")
-        msgBox.setText("Screen capture stopped.")
-        
-        # 设置消息框为置顶
-        msgBox.setWindowFlag(Qt.WindowStaysOnTopHint)
-        
-        # 显示消息框
-        msgBox.exec()
-        
+        QMessageBox.information(self, "Info", "Screen capture stopped.")
+
         # 恢复窗口透明度和边界线条
         self.setWindowOpacity(0.7)
         self.border_frame.show()
-        
+
         # 切换回有框窗口
         self.setWindowFlags(Qt.Window)
         self.show()
@@ -285,29 +272,8 @@ class ScreenCaptureWindow(QMainWindow):
                                                 self.geometry().x() + self.geometry().width(),
                                                 self.geometry().y() + self.geometry().height()))
 
-            # 在每次执行 OCR 之前比较图像相似度
-            if self.is_similar_to_previous(screenshot):
-                print("画面相似度高，不需要进行 OCR 辨识")
-            else:
-                # Perform OCR using Google Cloud Vision on the screenshot
-                self.perform_ocr(screenshot)
-
-
-    def is_similar_to_previous(self, current_image):
-        # 将当前图像与上一次捕获的图像进行相似度比较
-        if self.previous_image is not None:
-            # 使用OpenCV的相似度比较方法
-            result = cv2.matchTemplate(np.array(current_image), np.array(self.previous_image), cv2.TM_CCOEFF_NORMED)
-
-            # 获取最大匹配值
-            max_similarity = np.max(result)
-
-            # 设定相似度阈值，可以根据具体需求调整
-            similarity_threshold = 0.95  # 这里设定一个较高的阈值
-
-            if max_similarity >= similarity_threshold:
-                return True  # 与上一次图像相似
-        return False  # 与上一次图像不相似
+            # Perform OCR using Google Cloud Vision on the screenshot
+            self.perform_ocr(screenshot)
 
     def closeEvent(self, event):
         # Stop the timer when the screen capture window is closed
@@ -316,9 +282,6 @@ class ScreenCaptureWindow(QMainWindow):
         self.closed.emit()  # Emit the signal when the window is closed
 
     def perform_ocr(self, screenshot):
-        # 保存当前图像作为上一次捕获的图像
-        self.previous_image = screenshot.copy()
-
         # Save the screenshot to an in-memory buffer as a PNG image
         image_buffer = io.BytesIO()
         screenshot.save(image_buffer, format='PNG')
@@ -395,7 +358,7 @@ class ScreenCaptureWindow(QMainWindow):
 if __name__ == "__main__":
 
     # 設定Google Cloud金鑰環境變數，請將YOUR_GOOGLE_CLOUD_KEY替換成你的實際金鑰
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = './my-project-402509-a78336cadf69.json'
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/menghao/Downloads/大學專題資料/googleAPI/manifest-surfer-400014-6ed9f85a5367.json'
     #os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "YOUR_GOOGLE_CLOUD_KEY.json"
 
     # 初始化Google Cloud Vision API客戶端

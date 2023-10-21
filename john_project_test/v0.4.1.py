@@ -37,7 +37,7 @@ class MaincapturingWindow(QMainWindow):
                          screen_geometry.y() + screen_geometry.height() // 3,
                          screen_geometry.width() // 4, screen_geometry.height() // 3)
 
-        # Create a button to add or check the screen capture window
+        # Create a button to add the screen capture window
         self.add_window_button = QPushButton("Add Screen Capture Window", self)
         self.add_window_button.clicked.connect(self.add_or_check_screen_capture_window)
 
@@ -46,10 +46,16 @@ class MaincapturingWindow(QMainWindow):
         self.action_button.clicked.connect(self.toggle_capture)
         self.capturing = False  # Track capturing state
 
+        # Create a button to pin the window on the toppest
+        self.pin_button = QPushButton("not pin on top", self)
+        self.pin_button.clicked.connect(self.pin_on_top)
+        self.is_pined = True  # Track pining state
+
         # Set button backgrounds to transparent
         #self.add_window_button.setStyleSheet('QPushButton {background-color: transparent; color: red;}')
         self.add_window_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
         self.action_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
+        self.pin_button.setStyleSheet('QPushButton {background-color: white; color: red;}')
 
         # 创建用于显示OCR识别文本的QLabel
         self.ocr_label = QLabel("OCR Recognized Text:", self)
@@ -76,7 +82,7 @@ class MaincapturingWindow(QMainWindow):
 
         # 创建一个QFont对象来设置文字大小
         font = QFont()
-        font.setPointSize(16)  # 设置文字大小为14
+        font.setPointSize(14)  # 设置文字大小为14
         self.ocr_label.setFont(font)
         self.translation_label.setFont(font)
         self.ocr_text_label.setFont(font)
@@ -89,6 +95,7 @@ class MaincapturingWindow(QMainWindow):
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.add_window_button)
         button_layout.addWidget(self.action_button)
+        button_layout.addWidget(self.pin_button)
 
         # Add the horizontal button layout to the vertical layout
         layout.addLayout(button_layout)
@@ -126,10 +133,26 @@ class MaincapturingWindow(QMainWindow):
         else:
             self.start_capture()
 
+    def pin_on_top(self):
+        if self.is_pined:
+            self.is_pined = False 
+            self.pin_button.setText("pin on top")
+
+            # 移除screen_capture_window的最上层标志
+            self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+            self.show()
+        else:
+            self.is_pined = True 
+            self.pin_button.setText("not pin on top")
+
+            # 恢复screen_capture_window的最上层标志
+            self.setWindowFlag(Qt.WindowStaysOnTopHint)
+            self.show()
+
     def add_or_check_screen_capture_window(self):
         # Check if a screen capture window is already open
         if hasattr(self, 'screen_capture_window') and self.screen_capture_window:
-            QMessageBox.information(self, "Info", "You already have the Screen Capture Window open.")
+            QMessageBox.warning(self, "Warning", "You already have the Screen Capture Window open.")
         else:
             # Create and show the screen capture window
             self.screen_capture_window = ScreenCaptureWindow()
@@ -148,7 +171,7 @@ class MaincapturingWindow(QMainWindow):
             self.screen_capture_window.setWindowFlag(Qt.WindowStaysOnTopHint, False)
             self.screen_capture_window.show()
         else:
-            QMessageBox.information(self, "Info", "You haven't opened the Screen Capture Window yet.")
+            QMessageBox.warning(self, "Warning", "You haven't opened the Screen Capture Window yet.")
 
     def stop_capture(self):
         if hasattr(self, 'screen_capture_window') and self.screen_capture_window:
@@ -253,22 +276,12 @@ class ScreenCaptureWindow(QMainWindow):
 
     def stop_capture(self):
         self.timer.stop()
-    
-        # 创建消息框
-        msgBox = QMessageBox(self)
-        msgBox.setWindowTitle("Info")
-        msgBox.setText("Screen capture stopped.")
-        
-        # 设置消息框为置顶
-        msgBox.setWindowFlag(Qt.WindowStaysOnTopHint)
-        
-        # 显示消息框
-        msgBox.exec()
-        
+        QMessageBox.information(self, "Info", "Screen capture stopped.")
+
         # 恢复窗口透明度和边界线条
         self.setWindowOpacity(0.7)
         self.border_frame.show()
-        
+
         # 切换回有框窗口
         self.setWindowFlags(Qt.Window)
         self.show()
@@ -301,6 +314,7 @@ class ScreenCaptureWindow(QMainWindow):
 
             # 获取最大匹配值
             max_similarity = np.max(result)
+            print("匹配度：", max_similarity)
 
             # 设定相似度阈值，可以根据具体需求调整
             similarity_threshold = 0.95  # 这里设定一个较高的阈值
@@ -395,7 +409,7 @@ class ScreenCaptureWindow(QMainWindow):
 if __name__ == "__main__":
 
     # 設定Google Cloud金鑰環境變數，請將YOUR_GOOGLE_CLOUD_KEY替換成你的實際金鑰
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = './my-project-402509-a78336cadf69.json'
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/menghao/Downloads/大學專題資料/googleAPI/manifest-surfer-400014-8bcc91f54c0b.json'
     #os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "YOUR_GOOGLE_CLOUD_KEY.json"
 
     # 初始化Google Cloud Vision API客戶端
